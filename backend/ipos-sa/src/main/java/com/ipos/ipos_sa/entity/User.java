@@ -6,21 +6,14 @@ import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 
-/**
- * Represents a user account in IPOS-SA.
- * Roles determine which packages of IPOS-SA the user may access:
- *   ADMIN   – full access including account management (IPOS-SA-ACC)
- *   MANAGER – access to reports (IPOS-SA-RPT) and can modify merchant credit/status
- *   MERCHANT – access to catalogue (IPOS-SA-CAT) and orders (IPOS-SA-ORD)
- */
 @Entity
-@Table(name = "user_account")
+@Table(name = "users")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class UserAccount {
+public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -44,11 +37,10 @@ public class UserAccount {
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    /** Bidirectional link – one user account maps to at most one merchant profile. */
-    @OneToOne(mappedBy = "userAccount", fetch = FetchType.LAZY)
+    @OneToOne(mappedBy = "user", fetch = FetchType.LAZY)
     private Merchant merchant;
 
     public enum Role {
-        ADMIN, MANAGER, MERCHANT
+        ADMIN, MANAGER, ACCOUNTANT, MERCHANT
     }
 }

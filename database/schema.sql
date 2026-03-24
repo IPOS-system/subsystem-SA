@@ -121,6 +121,20 @@ CREATE TABLE IF NOT EXISTS payments (
     FOREIGN KEY (recorded_by) REFERENCES users(user_id)
 );
 
+CREATE TABLE IF NOT EXISTS stock_movement (
+    movement_id     INT AUTO_INCREMENT PRIMARY KEY,
+    product_id      VARCHAR(20) NOT NULL,
+    movement_type   ENUM('STOCK_IN','ORDER_OUT','ADJUSTMENT') NOT NULL,
+    quantity        INT NOT NULL,
+    movement_date   DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    reference_type  VARCHAR(50),
+    reference_id    INT,
+    notes           VARCHAR(500),
+    recorded_by     INT,
+    FOREIGN KEY (product_id) REFERENCES catalogue(product_id),
+    FOREIGN KEY (recorded_by) REFERENCES users(user_id)
+);
+
 CREATE TABLE IF NOT EXISTS audit_log (
     log_id      INT AUTO_INCREMENT PRIMARY KEY,
     user_id     INT          NOT NULL,
