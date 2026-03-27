@@ -1,8 +1,6 @@
 package model;
 
-/**
- * Represents a merchant (pharmacy owner) registered in IPOS-SA.
- */
+
 public class Merchant {
 
     public enum AccountStatus { NORMAL, SUSPENDED, IN_DEFAULT }
@@ -19,7 +17,6 @@ public class Merchant {
     private AccountStatus accountStatus;
     private Integer       discountPlanId;  // nullable
 
-    // ── Constructors ──────────────────────────────────────────────────────
 
     public Merchant() {}
 
@@ -40,7 +37,6 @@ public class Merchant {
         this.discountPlanId= discountPlanId;
     }
 
-    // ── Getters & Setters ─────────────────────────────────────────────────
 
     public int           getMerchantId()     { return merchantId; }
     public int           getUserId()         { return userId; }
@@ -66,7 +62,6 @@ public class Merchant {
     public void setAccountStatus(AccountStatus s)    { this.accountStatus = s; }
     public void setDiscountPlanId(Integer planId)    { this.discountPlanId = planId; }
 
-    /** Convenience: returns true if merchant can place new orders. */
     public boolean canPlaceOrders() {
         return accountStatus == AccountStatus.NORMAL;
     }

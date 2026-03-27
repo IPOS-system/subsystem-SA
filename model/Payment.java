@@ -2,7 +2,6 @@ package model;
 
 import java.time.LocalDateTime;
 
-/** Records a payment made by a merchant against an invoice. */
 public class Payment {
 
     public enum Method { BANK_TRANSFER, CARD, CHEQUE }
@@ -28,7 +27,6 @@ public class Payment {
         this.recordedBy    = recordedBy;
     }
 
-    // Getters
     public int           getPaymentId()     { return paymentId; }
     public int           getMerchantId()    { return merchantId; }
     public String        getInvoiceId()     { return invoiceId; }
@@ -38,7 +36,6 @@ public class Payment {
     public int           getRecordedBy()    { return recordedBy; }
     public String        getNotes()         { return notes; }
 
-    // Setters
     public void setPaymentId(int id)              { this.paymentId = id; }
     public void setMerchantId(int mid)            { this.merchantId = mid; }
     public void setInvoiceId(String iid)          { this.invoiceId = iid; }

@@ -3,7 +3,6 @@ package model;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
-/** Invoice generated for a merchant order. */
 public class Invoice {
 
     public enum PaymentStatus { PENDING, PAID, OVERDUE }
@@ -29,7 +28,6 @@ public class Invoice {
         this.dueDate       = dueDate;
     }
 
-    // Getters
     public String        getInvoiceId()     { return invoiceId; }
     public String        getOrderId()       { return orderId; }
     public int           getMerchantId()    { return merchantId; }
@@ -38,7 +36,6 @@ public class Invoice {
     public PaymentStatus getPaymentStatus() { return paymentStatus; }
     public LocalDate     getDueDate()       { return dueDate; }
 
-    // Setters
     public void setInvoiceId(String id)          { this.invoiceId = id; }
     public void setOrderId(String oid)           { this.orderId = oid; }
     public void setMerchantId(int mid)           { this.merchantId = mid; }

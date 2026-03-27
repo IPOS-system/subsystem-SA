@@ -1,6 +1,5 @@
 package model;
 
-/** One line in an order. */
 public class OrderItem {
 
     private int    itemId;
@@ -23,7 +22,6 @@ public class OrderItem {
         this.lineTotal          = quantity * unitPrice;
     }
 
-    // Getters
     public int    getItemId()              { return itemId; }
     public String getOrderId()             { return orderId; }
     public String getProductId()           { return productId; }
@@ -32,7 +30,6 @@ public class OrderItem {
     public double getUnitPrice()           { return unitPrice; }
     public double getLineTotal()           { return lineTotal; }
 
-    // Setters
     public void setItemId(int id)                  { this.itemId = id; }
     public void setOrderId(String oid)             { this.orderId = oid; }
     public void setProductId(String pid)           { this.productId = pid; }

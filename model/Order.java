@@ -4,9 +4,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Represents an order placed by a merchant in IPOS-SA.
- */
+
 public class Order {
 
     public enum Status { ACCEPTED, PROCESSING, DISPATCHED, DELIVERED, CANCELLED }
@@ -20,14 +18,12 @@ public class Order {
     private double        totalAmount;
     private List<OrderItem> items;
 
-    // Dispatch details (filled when status → DISPATCHED)
     private String        dispatchedBy;
     private LocalDateTime dispatchDate;
     private String        courier;
     private String        courierRef;
     private LocalDateTime expectedDelivery;
 
-    // ── Constructors ──────────────────────────────────────────────────────
 
     public Order() {
         this.items     = new ArrayList<>();
@@ -41,7 +37,6 @@ public class Order {
         this.merchantId = merchantId;
     }
 
-    // ── Getters & Setters ─────────────────────────────────────────────────
 
     public String        getOrderId()         { return orderId; }
     public int           getMerchantId()       { return merchantId; }
@@ -73,7 +68,6 @@ public class Order {
 
     public void addItem(OrderItem item) { items.add(item); }
 
-    /** Recalculates subtotal from line items. */
     public void recalculateSubtotal() {
         subtotal = items.stream().mapToDouble(OrderItem::getLineTotal).sum();
         totalAmount = subtotal - discountAmount;

@@ -30,7 +30,6 @@ public class Product {
         this.isActive         = true;
     }
 
-    // Getters
     public String  getProductId()        { return productId; }
     public String  getDescription()      { return description; }
     public String  getPackageType()      { return packageType; }
@@ -42,7 +41,6 @@ public class Product {
     public double  getReorderBufferPct() { return reorderBufferPct; }
     public boolean isActive()            { return isActive; }
 
-    // Setters
     public void setProductId(String id)           { this.productId = id; }
     public void setDescription(String d)          { this.description = d; }
     public void setPackageType(String pt)         { this.packageType = pt; }
@@ -54,7 +52,6 @@ public class Product {
     public void setReorderBufferPct(double pct)   { this.reorderBufferPct = pct; }
     public void setActive(boolean active)         { this.isActive = active; }
 
-    /** Returns how many packs to order to get 10%(or buffer%) above minStockLevel. */
     public int recommendedOrder() {
         int target = (int) Math.ceil(minStockLevel * (1 + reorderBufferPct / 100.0));
         return Math.max(0, target - availability);

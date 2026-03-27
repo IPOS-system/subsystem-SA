@@ -1,8 +1,6 @@
 package model;
 
-/**
- * Represents a system user (Admin, Manager, Accountant, or Merchant login).
- */
+
 public class User {
 
     public enum Role { ADMIN, MANAGER, ACCOUNTANT, MERCHANT }
@@ -13,7 +11,6 @@ public class User {
     private Role    role;
     private boolean isActive;
 
-    // ── Constructors ──────────────────────────────────────────────────────
 
     public User() {}
 
@@ -26,7 +23,6 @@ public class User {
         this.isActive     = isActive;
     }
 
-    // ── Getters & Setters ─────────────────────────────────────────────────
 
     public int     getUserId()       { return userId; }
     public String  getUsername()     { return username; }
