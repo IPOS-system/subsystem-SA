@@ -3,6 +3,7 @@ package com.ipos.ipos_sa.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -12,7 +13,7 @@ import java.util.List;
  * Represents a product in the InfoPharma electronic catalogue (IPOS-SA-CAT).
  *
  * Stock management rules:
- *   - current_availability is decremented when an order is accepted (ORDER_OUT stock movement).
+ *   - availability is decremented when an order is accepted.
  *   - When availability drops below min_stock_level, a low-stock warning is shown to
  *     ADMIN and MANAGER users and the item appears in the Low Stock Level Report (Appendix 3).
  */
@@ -68,12 +69,10 @@ public class CatalogueItem {
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    @Column(name = "updated_at")
+    @UpdateTimestamp
+    @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
     @OneToMany(mappedBy = "catalogueItem", fetch = FetchType.LAZY)
     private List<OrderItem> orderItems;
-
-    @OneToMany(mappedBy = "catalogueItem", fetch = FetchType.LAZY)
-    private List<StockMovement> stockMovements;
 }

@@ -49,7 +49,8 @@ public class Payment {
     private PaymentMethod paymentMethod;
 
     /** Bank / card / cheque reference number provided by the merchant. */
-    @Column(name = "notes")
+    @Lob
+    @Column(name = "notes", columnDefinition = "TEXT")
     private String notes;
 
     /** The IPOS-SA user (accountant / admin) who recorded this payment. */

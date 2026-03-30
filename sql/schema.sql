@@ -77,6 +77,8 @@ CREATE TABLE IF NOT EXISTS orders (
     discount_amount DECIMAL(10,2) NOT NULL DEFAULT 0.00,
     total_amount    DECIMAL(10,2) NOT NULL DEFAULT 0.00,
     dispatched_by_user_id INT DEFAULT NULL,
+    dispatch_date   DATETIME,
+    courier         VARCHAR(100),
     courier_ref     VARCHAR(100),
     expected_delivery DATETIME,
     FOREIGN KEY (merchant_id) REFERENCES merchants(merchant_id),
@@ -90,6 +92,9 @@ CREATE TABLE IF NOT EXISTS order_items (
     quantity    INT           NOT NULL,
     unit_price  DECIMAL(10,2) NOT NULL,
     line_total  DECIMAL(10,2) NOT NULL,
+    FOREIGN KEY (order_id)   REFERENCES orders(order_id)   ON DELETE CASCADE,
+    FOREIGN KEY (product_id) REFERENCES catalogue(product_id)
+);
 
 CREATE TABLE IF NOT EXISTS invoices (
     invoice_id    VARCHAR(20)   PRIMARY KEY,  
@@ -103,6 +108,9 @@ CREATE TABLE IF NOT EXISTS invoices (
     FOREIGN KEY (merchant_id) REFERENCES merchants(merchant_id)
 );
 
+CREATE TABLE IF NOT EXISTS payments (
+    payment_id      INT AUTO_INCREMENT PRIMARY KEY,
+    merchant_id     INT           NOT NULL,
     invoice_id      VARCHAR(20)   NOT NULL,
     amount_paid     DECIMAL(10,2) NOT NULL,
     payment_method  ENUM('BANK_TRANSFER','CARD','CHEQUE') NOT NULL,
@@ -114,22 +122,6 @@ CREATE TABLE IF NOT EXISTS invoices (
     FOREIGN KEY (recorded_by) REFERENCES users(user_id)
 );
 
-<<<<<<< HEAD:database/schema.sql
-CREATE TABLE IF NOT EXISTS stock_movement (
-    movement_id     INT AUTO_INCREMENT PRIMARY KEY,
-    product_id      VARCHAR(20) NOT NULL,
-    movement_type   ENUM('STOCK_IN','ORDER_OUT','ADJUSTMENT') NOT NULL,
-    quantity        INT NOT NULL,
-    movement_date   DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    reference_type  VARCHAR(50),
-    reference_id    INT,
-    notes           VARCHAR(500),
-    recorded_by     INT,
-    FOREIGN KEY (product_id) REFERENCES catalogue(product_id),
-    FOREIGN KEY (recorded_by) REFERENCES users(user_id)
-);
-
-=======
 
 CREATE TABLE IF NOT EXISTS monthly_discount_tracker (
     tracker_id      INT AUTO_INCREMENT PRIMARY KEY,
@@ -146,7 +138,6 @@ CREATE TABLE IF NOT EXISTS monthly_discount_tracker (
 );
 
 
->>>>>>> origin/main:sql/schema.sql
 CREATE TABLE IF NOT EXISTS audit_log (
     log_id      INT AUTO_INCREMENT PRIMARY KEY,
     user_id     INT          NOT NULL,

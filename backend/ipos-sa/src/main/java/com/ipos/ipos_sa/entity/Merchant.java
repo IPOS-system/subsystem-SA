@@ -39,7 +39,7 @@ public class Merchant {
     @Column(name = "company_name", nullable = false, length = 100)
     private String companyName;
 
-    @Column(name = "email", nullable = false, length = 100)
+    @Column(name = "email", length = 100)
     private String email;
 
     @Column(name = "phone", length = 30)
