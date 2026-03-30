@@ -37,10 +37,17 @@ public class User {
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
+
     @OneToOne(mappedBy = "user", fetch = FetchType.LAZY)
     private Merchant merchant;
 
+    @OneToMany(mappedBy = "authorizedBy", fetch = FetchType.LAZY)
+    private java.util.List<Merchant> authorizedMerchants;
+
+    @OneToMany(mappedBy = "dispatchedByUser", fetch = FetchType.LAZY)
+    private java.util.List<Order> dispatchedOrders;
+
     public enum Role {
-        ADMIN, MANAGER, ACCOUNTANT, MERCHANT
+        ADMIN, MANAGER, ACCOUNTANT, DIRECTOR, MERCHANT
     }
 }

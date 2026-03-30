@@ -61,8 +61,10 @@ public class Order {
 
     // ── Dispatch details (populated when status transitions to DISPATCHED) ──
 
-    @Column(name = "dispatched_by", length = 100)
-    private String dispatchedBy;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "dispatched_by_user_id")
+    private User dispatchedByUser;
 
     @Column(name = "dispatch_date")
     private LocalDateTime dispatchDate;

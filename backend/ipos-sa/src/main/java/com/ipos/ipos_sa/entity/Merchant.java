@@ -59,13 +59,21 @@ public class Merchant {
     @Column(name = "current_balance", nullable = false, precision = 10, scale = 2)
     private BigDecimal currentBalance;
 
+
     @Enumerated(EnumType.STRING)
     @Column(name = "account_status", nullable = false)
     private AccountStatus accountStatus;
 
+    @Column(name = "status_changed_at")
+    private LocalDateTime statusChangedAt;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "discount_plan_id")
     private DiscountPlan discountPlan;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "authorized_by")
+    private User authorizedBy;
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
