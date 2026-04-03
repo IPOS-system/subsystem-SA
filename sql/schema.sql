@@ -149,6 +149,7 @@ CREATE TABLE IF NOT EXISTS audit_log (
     FOREIGN KEY (user_id) REFERENCES users(user_id)
 );
 
+/*
 
 INSERT IGNORE INTO users (username, password_hash, role)
 VALUES ('admin',
@@ -159,3 +160,13 @@ INSERT IGNORE INTO users (username, password_hash, role)
 VALUES ('director',
         SHA2('Director1234!', 256),
         'DIRECTOR');
+
+*/
+
+-- BCrypt hash of 'Admin1234!'
+INSERT IGNORE INTO users (username, password_hash, role)
+VALUES ('admin', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lheW', 'ADMIN');
+
+-- BCrypt hash of 'Director1234!'
+INSERT IGNORE INTO users (username, password_hash, role)
+VALUES ('director', '$2a$10$GRLdNijSQMUvl/au9ofL.eDwmoohzzS7.rmNSJZ.0FxO9UHx3mRV.', 'DIRECTOR');

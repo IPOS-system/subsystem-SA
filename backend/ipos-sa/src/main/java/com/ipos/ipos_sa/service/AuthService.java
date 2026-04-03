@@ -65,7 +65,7 @@ public class AuthService {
 
         // For MERCHANT role, add merchant ID and check payment reminder
         if (user.getRole() == User.Role.MERCHANT) {
-            Optional<Merchant> merchantOpt = merchantRepository.findByUser(user);
+            Optional<Merchant> merchantOpt = merchantRepository.findByUser_UserId(user.getUserId());
             if (merchantOpt.isPresent()) {
                 Merchant merchant = merchantOpt.get();
                 response.setMerchantId(merchant.getMerchantId());

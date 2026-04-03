@@ -11,6 +11,9 @@ public interface UserRepository extends JpaRepository<User, Integer> {
     /** Used by AuthService to look up credentials at login. */
     Optional<User> findByUsername(String username);
 
+    /** Used by AccountService to look up user details when creating/editing accounts. */
+    Optional<User> findByUserId(Integer userId);
+
     /** Used by AccountService to enforce unique usernames on account creation. */
     boolean existsByUsername(String username);
 
