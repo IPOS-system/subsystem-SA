@@ -125,6 +125,17 @@ public class OrderController {
     // ── All Orders — Admin (Past Orders screen) ──────────────────────────────
 
     /**
+     * GET /api/orders/incomplete
+     * Returns all orders that are not yet DELIVERED or CANCELLED.
+     * Per the marking sheet: "Observing the list of orders taken but not completed."
+     */
+    @GetMapping("/incomplete")
+    public ResponseEntity<List<OrderDTO>> getIncompleteOrders(Authentication auth) {
+        requireRole(auth, User.Role.ADMIN, User.Role.MANAGER);
+        return ResponseEntity.ok(orderService.getIncompleteOrders());
+    }
+ 
+    /**
      * GET /api/orders
      * Returns all orders. Optionally filter with ?status=ACCEPTED etc.
      * ADMIN and MANAGER only.

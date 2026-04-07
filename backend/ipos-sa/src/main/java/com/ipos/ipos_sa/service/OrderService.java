@@ -331,6 +331,18 @@ public class OrderService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Returns all incomplete orders (not DELIVERED, not CANCELLED).
+     * Used by the admin "orders not completed" view.
+     */
+    public List<OrderDTO> getIncompleteOrders() {
+        return orderRepository.findByStatusNotIn(
+                        List.of(Order.OrderStatus.DELIVERED, Order.OrderStatus.CANCELLED))
+                .stream()
+                .map(this::toDTO)
+                .collect(Collectors.toList());
+    }
+
     // ── Cancel Order (internal) ───────────────────────────────────────────────
 
     /**

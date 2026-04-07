@@ -4,6 +4,7 @@ import com.ipos.ipos_sa.dto.auth.LoginRequest;
 import com.ipos.ipos_sa.dto.auth.LoginResponse;
 import com.ipos.ipos_sa.entity.User;
 import com.ipos.ipos_sa.entity.Merchant;
+import com.ipos.ipos_sa.repository.InvoiceRepository;
 import com.ipos.ipos_sa.repository.UserRepository;
 import com.ipos.ipos_sa.repository.MerchantRepository;
 import com.ipos.ipos_sa.util.JwtUtil;
@@ -11,10 +12,17 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.Optional;
 
 /**
  * Authentication service responsible for login logic.
+ *
+ * On merchant login, this service:
+ *   1. Validates credentials and active status.
+ *   2. Re-checks the merchant's account status (15/30-day overdue rule).
+ *   3. Sets the paymentReminderDue flag if any invoice is 1–15 days overdue.
+ *   4. Returns a JWT token with role-based claims.
  */
 @Service
 @RequiredArgsConstructor
@@ -22,9 +30,9 @@ public class AuthService {
 
     private final UserRepository userRepository;
     private final MerchantRepository merchantRepository;
+    private final InvoiceRepository invoiceRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
-    private final InvoiceRepository invoiceRepository;
     private final AccountService accountService;
 
     /**
@@ -65,19 +73,26 @@ public class AuthService {
                 .paymentReminderDue(false)
                 .build();
 
-        // For MERCHANT role, add merchant ID and check payment reminder
+        // For MERCHANT role, check account status and payment reminders
         if (user.getRole() == User.Role.MERCHANT) {
             Optional<Merchant> merchantOpt = merchantRepository.findByUser_UserId(user.getUserId());
             if (merchantOpt.isPresent()) {
                 Merchant merchant = merchantOpt.get();
                 response.setMerchantId(merchant.getMerchantId());
+
+                // Re-check account status (15/30-day overdue rule)
+                accountService.checkAndUpdateAccountStatus(merchant.getMerchantId());
+
+                // Check if any invoice is 1–15 days overdue (reminder banner)
                 response.setPaymentReminderDue(
-                    invoiceRepository.hasInvoicesDueForReminder(
-                        merchant.getMerchantId(), LocalDate.now(), LocalDate.now().minusDays(15)));
+                        invoiceRepository.hasInvoicesDueForReminder(
+                                merchant.getMerchantId(),
+                                LocalDate.now(),
+                                LocalDate.now().minusDays(15)));
             }
         }
 
-        // Attach token to response (or return separately depending on frontend expectations)
+        // Attach token
         response.setToken(token);
 
         return response;

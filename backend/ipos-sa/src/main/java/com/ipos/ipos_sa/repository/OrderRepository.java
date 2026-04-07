@@ -24,6 +24,12 @@ public interface OrderRepository extends JpaRepository<Order, String> {
             Integer merchantId, LocalDateTime from, LocalDateTime to);
 
     /**
+     * Returns all orders that are not yet completed (not DELIVERED, not CANCELLED).
+     * Per the marking sheet: "Observing the list of orders taken but not completed" (1 mark).
+     */
+    List<Order> findByStatusNotIn(List<Order.OrderStatus> statuses);
+
+    /**
      * RPT-01 (Turnover): total revenue received in a date range.
      * Sums total_amount across all non-cancelled orders in the period.
      */

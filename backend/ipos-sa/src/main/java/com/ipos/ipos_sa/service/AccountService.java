@@ -215,6 +215,36 @@ public class AccountService {
         return toMerchantDTO(merchant);
     }
 
+    /**
+     * Changes the role of an existing user account.
+     * Per the marking sheet: "change roles (promote/demote) to level of access."
+     * The user's username and password are retained.
+     */
+    @Transactional
+    public StaffDTO changeUserRole(Integer userId, User.Role newRole, User actingUser) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User", userId));
+
+        User.Role oldRole = user.getRole();
+        user.setRole(newRole);
+        userRepository.save(user);
+
+        audit(actingUser, "CHANGE_ROLE",
+                "user", String.valueOf(userId),
+                "Changed role from " + oldRole + " to " + newRole
+                        + " for user: " + user.getUsername());
+
+        log.info("Role changed: userId={} from {} to {}", userId, oldRole, newRole);
+
+        return StaffDTO.builder()
+                .userId(user.getUserId())
+                .username(user.getUsername())
+                .role(user.getRole())
+                .isActive(user.getIsActive())
+                .createdAt(user.getCreatedAt())
+                .build();
+    }
+
 /**
 * Resets a user's password. ADMIN only — enforced in the controller.
  * Per the brief (UC-3), the old password is invalidated and replaced.
