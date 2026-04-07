@@ -36,7 +36,8 @@ public class AuthController {
             LoginResponse response = authService.login(request);
             return ResponseEntity.ok(response);
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(401).build();
+            ApiErrorResponse error = new ApiErrorResponse("INVALID_CREDENTIALS", "Invalid username or password");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
         }
     }
 }

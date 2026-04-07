@@ -24,6 +24,8 @@ public class AuthService {
     private final MerchantRepository merchantRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
+    private final InvoiceRepository invoiceRepository;
+    private final AccountService accountService;
 
     /**
      * Authenticate user by username and password.
@@ -69,7 +71,9 @@ public class AuthService {
             if (merchantOpt.isPresent()) {
                 Merchant merchant = merchantOpt.get();
                 response.setMerchantId(merchant.getMerchantId());
-                // TODO: check for overdue invoices (1-15 days) and set paymentReminderDue
+                response.setPaymentReminderDue(
+                    invoiceRepository.hasInvoicesDueForReminder(
+                        merchant.getMerchantId(), LocalDate.now(), LocalDate.now().minusDays(15)));
             }
         }
 
