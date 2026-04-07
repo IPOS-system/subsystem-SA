@@ -178,7 +178,8 @@ public class AccountService {
                                              UpdateMerchantRequest request,
                                              User actingUser) {
 
-        Merchant merchant = merchantRepository.findById(merchantId)
+        Merchant merchant = merchantRepository
+                .findById(merchantId)
                 .orElseThrow(() -> new ResourceNotFoundException("Merchant", merchantId));
 
         if (request.getCompanyName() != null) merchant.setCompanyName(request.getCompanyName());
@@ -187,16 +188,21 @@ public class AccountService {
         if (request.getFax()         != null) merchant.setFax(request.getFax());
         if (request.getEmail()       != null) merchant.setEmail(request.getEmail());
 
+        // Password change - ADMIN / MANAGER only ()
         // Credit limit — ADMIN / MANAGER only (caller must enforce role before calling)
-        if (request.getCreditLimit() != null) {
+        if (request.getCreditLimit() != null) 
+        {
             merchant.setCreditLimit(request.getCreditLimit());
         }
 
         // Discount plan — ADMIN / MANAGER only
-        if (request.getDiscountPlanId() != null) {
-            DiscountPlan plan = discountPlanRepository.findById(request.getDiscountPlanId())
-                    .orElseThrow(() -> new ResourceNotFoundException(
-                            "DiscountPlan", request.getDiscountPlanId()));
+        if (request.getDiscountPlanId() != null) 
+        {
+            DiscountPlan plan = discountPlanRepository
+            .findById(request.getDiscountPlanId())
+            .orElseThrow(() -> new ResourceNotFoundException
+            (
+                "DiscountPlan", request.getDiscountPlanId()));
             merchant.setDiscountPlan(plan);
         }
 
@@ -208,6 +214,25 @@ public class AccountService {
 
         return toMerchantDTO(merchant);
     }
+
+/**
+* Resets a user's password. ADMIN only — enforced in the controller.
+ * Per the brief (UC-3), the old password is invalidated and replaced.
+ */
+ @Transactional
+public void resetPassword(Integer userId, String newPassword, User actingUser) {
+                User user = userRepository.findById(userId)
+                        .orElseThrow(() -> new ResourceNotFoundException("User", userId));
+
+                user.setPasswordHash(passwordEncoder.encode(newPassword));
+                userRepository.save(user);
+
+                audit(actingUser, "RESET_PASSWORD",
+                        "user", String.valueOf(userId),
+                        "Password reset for: " + user.getUsername());
+
+        log.info("Password reset: userId={} by adminId={}", userId, actingUser.getUserId());
+}
 
     // ── Restore from IN_DEFAULT ───────────────────────────────────────────────
 

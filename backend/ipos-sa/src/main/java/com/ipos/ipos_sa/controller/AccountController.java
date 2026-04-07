@@ -6,6 +6,8 @@ import com.ipos.ipos_sa.exception.AccessDeniedException;
 import com.ipos.ipos_sa.repository.UserRepository;
 import com.ipos.ipos_sa.service.AccountService;
 import com.ipos.ipos_sa.exception.ResourceNotFoundException;
+import com.ipos.ipos_sa.entity.Merchant;
+import com.ipos.ipos_sa.repository.MerchantRepository;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -35,6 +37,10 @@ public class AccountController {
 
     private final AccountService  accountService;
     private final UserRepository  userRepository;
+    private final ResetPasswordRequest resetPasswordRequest;
+    private final AccountService   accountService;
+    private final UserRepository   userRepository;
+    private final MerchantRepository merchantRepository;  // add this
 
     // ── Merchant Endpoints ────────────────────────────────────────────────────
 
@@ -83,6 +89,20 @@ public class AccountController {
         MerchantDTO created = accountService.createMerchantAccount(request, actingUser);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
+    /**
+    * GET /api/accounts/me
+    * Returns the current user's own merchant profile.
+    * MERCHANT role only — other roles use the admin endpoints.
+    */
+    @GetMapping("/me")
+    public ResponseEntity<MerchantDTO> getMyAccount(Authentication auth) {
+    requireRole(auth, User.Role.MERCHANT);
+    User user = resolveUser(auth);
+    Merchant merchant = merchantRepository.findByUser(user)
+            .orElseThrow(() -> new ResourceNotFoundException(
+                    "Merchant profile not found for user: " + user.getUsername()));
+    return ResponseEntity.ok(accountService.toMerchantDTO(merchant));
+}
 
     /**
      * PUT /api/accounts/merchants/{id}
@@ -174,6 +194,21 @@ public class AccountController {
         accountService.reactivateAccount(id, actingUser);
         return ResponseEntity.noContent().build();
     }
+    /**
+    * PUT /api/accounts/{id}/reset-password
+    * Resets a user's password. ADMIN only.
+    */
+    @PutMapping("/{id}/reset-password")
+    public ResponseEntity<Void> resetPassword(
+        @PathVariable Integer id,
+        @Valid @RequestBody ResetPasswordRequest request,
+        Authentication auth) {
+
+    requireRole(auth, User.Role.ADMIN);
+    User actingUser = resolveUser(auth);
+    accountService.resetPassword(id, request.getNewPassword(), actingUser);
+    return ResponseEntity.noContent().build();
+}
 
     // ── Helpers ───────────────────────────────────────────────────────────────
 

@@ -5,6 +5,7 @@ import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Table(name = "users")
@@ -42,10 +43,10 @@ public class User {
     private Merchant merchant;
 
     @OneToMany(mappedBy = "authorizedBy", fetch = FetchType.LAZY)
-    private java.util.List<Merchant> authorizedMerchants;
+    private List<Merchant> authorizedMerchants;
 
     @OneToMany(mappedBy = "dispatchedByUser", fetch = FetchType.LAZY)
-    private java.util.List<Order> dispatchedOrders;
+    private List<Order> dispatchedOrders;
 
     public enum Role {
         ADMIN, MANAGER, ACCOUNTANT, DIRECTOR, MERCHANT
