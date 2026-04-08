@@ -1,0 +1,665 @@
+﻿<Application
+    x:Class="GOATflow.App"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="clr-namespace:GOATflow"
+    StartupUri="MainWindow.xaml">
+    <Application.Resources>
+        <Style x:Key="FocusVisual">
+            <Setter Property="Control.Template">
+                <Setter.Value>
+                    <ControlTemplate>
+                        <Rectangle
+                            Margin="2"
+                            SnapsToDevicePixels="true"
+                            Stroke="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}"
+                            StrokeDashArray="1 2"
+                            StrokeThickness="1" />
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="UsernameTextBoxStyle" TargetType="{x:Type TextBox}">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type TextBox}">
+
+                        <Border
+                            x:Name="border"
+                            Background="{TemplateBinding Background}"
+                            BorderThickness="1,1,1,2"
+                            ClipToBounds="True"
+                            CornerRadius="3">
+                            <Border.BorderBrush>
+                                <LinearGradientBrush StartPoint="0.5,0" EndPoint="0.5,1">
+                                    <GradientStop Color="#55EEEEEE" />
+                                    <GradientStop x:Name="g1" Offset="1" Color="#22EEEEEE" />
+                                </LinearGradientBrush>
+                            </Border.BorderBrush>
+
+                            <Grid Background="Transparent">
+                                <Path
+                                    Margin="16,15,206,15"
+                                    Opacity=".5"
+                                    Stretch="Fill"
+                                    Stroke="White">
+                                    <Path.Data>
+                                        M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75
+                                    </Path.Data>
+                                </Path>
+
+                                <TextBox
+                                    x:Name="SearchBox"
+                                    Margin="44,0,23,0"
+                                    HorizontalContentAlignment="Left"
+                                    VerticalContentAlignment="Center"
+                                    Background="Transparent"
+                                    BorderThickness="0"
+                                    FontFamily="/GOATflow;component/Assets/Fonts/Poppins/#Poppins Medium"
+                                    FontSize="12"
+                                    Foreground="#EEEEEE"
+                                    MaxLength="30"
+                                    MaxLines="1"
+                                    Text="{TemplateBinding Text}" />
+
+                                <TextBlock
+                                    Margin="44,0,0,0"
+                                    HorizontalAlignment="Left"
+                                    VerticalAlignment="Center"
+                                    FontFamily="/GOATflow;component/Assets/Fonts/Poppins/#Poppins Medium"
+                                    FontSize="12"
+                                    Foreground="#AAAAAA"
+                                    IsHitTestVisible="False"
+                                    Opacity="0.3"
+                                    Text="Email Address">
+
+                                    <TextBlock.Style>
+                                        <Style TargetType="{x:Type TextBlock}">
+                                            <Setter Property="Visibility" Value="Hidden" />
+                                            <Style.Triggers>
+                                                <MultiDataTrigger>
+                                                    <MultiDataTrigger.Conditions>
+                                                        <Condition Binding="{Binding Text, ElementName=SearchBox}" Value="" />
+                                                        <Condition Binding="{Binding IsFocused, ElementName=SearchBox}" Value="False" />
+                                                    </MultiDataTrigger.Conditions>
+                                                    <Setter Property="Visibility" Value="Visible" />
+                                                </MultiDataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </Grid>
+                        </Border>
+
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsKeyboardFocusWithin" Value="True">
+                                <Trigger.EnterActions>
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <ColorAnimationUsingKeyFrames Storyboard.TargetName="g1" Storyboard.TargetProperty="Color">
+                                                <EasingColorKeyFrame KeyTime="0:0:0.3" Value="#24273a">
+                                                    <EasingColorKeyFrame.EasingFunction>
+                                                        <QuarticEase />
+                                                    </EasingColorKeyFrame.EasingFunction>
+                                                </EasingColorKeyFrame>
+                                            </ColorAnimationUsingKeyFrames>
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </Trigger.EnterActions>
+                                <Trigger.ExitActions>
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <ColorAnimationUsingKeyFrames Storyboard.TargetName="g1" Storyboard.TargetProperty="Color">
+                                                <EasingColorKeyFrame KeyTime="0:0:3" Value="#22EEEEEE">
+                                                    <EasingColorKeyFrame.EasingFunction>
+                                                        <QuarticEase />
+                                                    </EasingColorKeyFrame.EasingFunction>
+                                                </EasingColorKeyFrame>
+                                            </ColorAnimationUsingKeyFrames>
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </Trigger.ExitActions>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="PasswordTextBoxStyle" TargetType="{x:Type TextBox}">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type TextBox}">
+
+                        <Border
+                            x:Name="border"
+                            Background="{TemplateBinding Background}"
+                            BorderThickness="1,1,1,2"
+                            ClipToBounds="True"
+                            CornerRadius="3">
+                            <Border.BorderBrush>
+                                <LinearGradientBrush StartPoint="0.5,0" EndPoint="0.5,1">
+                                    <GradientStop Color="#55EEEEEE" />
+                                    <GradientStop x:Name="g1" Offset="1" Color="#22EEEEEE" />
+                                </LinearGradientBrush>
+                            </Border.BorderBrush>
+
+                            <Grid Background="Transparent">
+                                <Path
+                                    Width="15"
+                                    Margin="16,14,0,14"
+                                    HorizontalAlignment="Left"
+                                    Opacity=".5"
+                                    Stretch="Fill"
+                                    Stroke="White"
+                                    StrokeThickness="1">
+                                    <Path.Data>
+                                        M15.75 5.25a3 3 0 0 1 3 3m3 0a6 6 0 0 1-7.029 5.912c-.563-.097-1.159.026-1.563.43L10.5 17.25H8.25v2.25H6v2.25H2.25v-2.818c0-.597.237-1.17.659-1.591l6.499-6.499c.404-.404.527-1 .43-1.563A6 6 0 1 1 21.75 8.25Z
+                                    </Path.Data>
+                                </Path>
+
+                                <TextBox
+                                    x:Name="SearchBox"
+                                    Margin="44,0,23,0"
+                                    HorizontalContentAlignment="Left"
+                                    VerticalContentAlignment="Center"
+                                    Background="Transparent"
+                                    BorderThickness="0"
+                                    FontFamily="/GOATflow;component/Assets/Fonts/Poppins/#Poppins Medium"
+                                    FontSize="12"
+                                    Foreground="#EEEEEE"
+                                    MaxLength="30"
+                                    MaxLines="1"
+                                    Text="{TemplateBinding Text}" />
+
+                                <TextBlock
+                                    Margin="44,0,0,0"
+                                    HorizontalAlignment="Left"
+                                    VerticalAlignment="Center"
+                                    FontFamily="/GOATflow;component/Assets/Fonts/Poppins/#Poppins Medium"
+                                    FontSize="12"
+                                    Foreground="#AAAAAA"
+                                    IsHitTestVisible="False"
+                                    Opacity="0.3"
+                                    Text="Password">
+
+                                    <TextBlock.Style>
+                                        <Style TargetType="{x:Type TextBlock}">
+                                            <Setter Property="Visibility" Value="Hidden" />
+                                            <Style.Triggers>
+                                                <MultiDataTrigger>
+                                                    <MultiDataTrigger.Conditions>
+                                                        <Condition Binding="{Binding Text, ElementName=SearchBox}" Value="" />
+                                                        <Condition Binding="{Binding IsFocused, ElementName=SearchBox}" Value="False" />
+                                                    </MultiDataTrigger.Conditions>
+                                                    <Setter Property="Visibility" Value="Visible" />
+                                                </MultiDataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </Grid>
+                        </Border>
+
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsKeyboardFocusWithin" Value="True">
+                                <Trigger.EnterActions>
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <ColorAnimationUsingKeyFrames Storyboard.TargetName="g1" Storyboard.TargetProperty="Color">
+                                                <EasingColorKeyFrame KeyTime="0:0:0.3" Value="#24273a">
+                                                    <EasingColorKeyFrame.EasingFunction>
+                                                        <QuarticEase />
+                                                    </EasingColorKeyFrame.EasingFunction>
+                                                </EasingColorKeyFrame>
+                                            </ColorAnimationUsingKeyFrames>
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </Trigger.EnterActions>
+                                <Trigger.ExitActions>
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <ColorAnimationUsingKeyFrames Storyboard.TargetName="g1" Storyboard.TargetProperty="Color">
+                                                <EasingColorKeyFrame KeyTime="0:0:3" Value="#22EEEEEE">
+                                                    <EasingColorKeyFrame.EasingFunction>
+                                                        <QuarticEase />
+                                                    </EasingColorKeyFrame.EasingFunction>
+                                                </EasingColorKeyFrame>
+                                            </ColorAnimationUsingKeyFrames>
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </Trigger.ExitActions>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="TealButtonStyle" TargetType="{x:Type Button}">
+            <Setter Property="FocusVisualStyle" Value="{StaticResource FocusVisual}" />
+            <Setter Property="FontFamily" Value="/GOATflow;component/Assets/Fonts/Poppins/#Poppins Semibold" />
+            <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="RenderTransformOrigin" Value="0.5,0.5" />
+            <Setter Property="UseLayoutRounding" Value="True" />
+            <Setter Property="RenderTransform">
+                <Setter.Value>
+                    <ScaleTransform ScaleX="1" ScaleY="1" />
+                </Setter.Value>
+            </Setter>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type Button}">
+                        <Border
+                            x:Name="border"
+                            Background="{TemplateBinding Background}"
+                            BorderThickness="1"
+                            CornerRadius="3"
+                            SnapsToDevicePixels="true">
+                            <Border.BorderBrush>
+                                <LinearGradientBrush StartPoint="0.5,0" EndPoint="0.5,1">
+                                    <GradientStop x:Name="g1" Color="#67CACC" />
+                                    <GradientStop x:Name="g2" Offset="1" Color="#014244" />
+                                </LinearGradientBrush>
+                            </Border.BorderBrush>
+                            <ContentPresenter
+                                x:Name="contentPresenter"
+                                Margin="{TemplateBinding Padding}"
+                                HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                                Focusable="False"
+                                RecognizesAccessKey="True"
+                                SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" />
+                            <Border.Effect>
+                                <DropShadowEffect BlurRadius="2" ShadowDepth="0" />
+                            </Border.Effect>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Trigger.EnterActions>
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="(Button.RenderTransform).(ScaleTransform.ScaleX)">
+                                                <EasingDoubleKeyFrame KeyTime="0:0:0.15" Value="1.08">
+                                                    <EasingDoubleKeyFrame.EasingFunction>
+                                                        <CubicEase EasingMode="EaseOut" />
+                                                    </EasingDoubleKeyFrame.EasingFunction>
+                                                </EasingDoubleKeyFrame>
+                                            </DoubleAnimationUsingKeyFrames>
+                                            <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="(Button.RenderTransform).(ScaleTransform.ScaleY)">
+                                                <EasingDoubleKeyFrame KeyTime="0:0:0.15" Value="1.08">
+                                                    <EasingDoubleKeyFrame.EasingFunction>
+                                                        <CubicEase EasingMode="EaseOut" />
+                                                    </EasingDoubleKeyFrame.EasingFunction>
+                                                </EasingDoubleKeyFrame>
+                                            </DoubleAnimationUsingKeyFrames>
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </Trigger.EnterActions>
+                                <Trigger.ExitActions>
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="(Button.RenderTransform).(ScaleTransform.ScaleX)">
+                                                <EasingDoubleKeyFrame KeyTime="0:0:0.15" Value="1">
+                                                    <EasingDoubleKeyFrame.EasingFunction>
+                                                        <CubicEase EasingMode="EaseOut" />
+                                                    </EasingDoubleKeyFrame.EasingFunction>
+                                                </EasingDoubleKeyFrame>
+                                            </DoubleAnimationUsingKeyFrames>
+                                            <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="(Button.RenderTransform).(ScaleTransform.ScaleY)">
+                                                <EasingDoubleKeyFrame KeyTime="0:0:0.15" Value="1">
+                                                    <EasingDoubleKeyFrame.EasingFunction>
+                                                        <CubicEase EasingMode="EaseOut" />
+                                                    </EasingDoubleKeyFrame.EasingFunction>
+                                                </EasingDoubleKeyFrame>
+                                            </DoubleAnimationUsingKeyFrames>
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </Trigger.ExitActions>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="TransparentButtonStyle" TargetType="{x:Type Button}">
+            <Setter Property="FocusVisualStyle" Value="{StaticResource FocusVisual}" />
+            <Setter Property="FontFamily" Value="/GOATflow;component/Assets/Fonts/Poppins/#Poppins Semibold" />
+            <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="RenderTransformOrigin" Value="0.5,0.5" />
+            <Setter Property="UseLayoutRounding" Value="True" />
+            <Setter Property="RenderTransform">
+                <Setter.Value>
+                    <ScaleTransform ScaleX="1" ScaleY="1" />
+                </Setter.Value>
+            </Setter>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type Button}">
+                        <Border
+                            x:Name="border"
+                            Background="Transparent"
+                            BorderThickness="0"
+                            CornerRadius="3"
+                            SnapsToDevicePixels="true">
+
+                            <ContentPresenter
+                                x:Name="contentPresenter"
+                                Margin="{TemplateBinding Padding}"
+                                HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                                Focusable="False"
+                                RecognizesAccessKey="True"
+                                SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" />
+                            <Border.Effect>
+                                <DropShadowEffect BlurRadius="2" ShadowDepth="0" />
+                            </Border.Effect>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Trigger.EnterActions>
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="(Button.RenderTransform).(ScaleTransform.ScaleX)">
+                                                <EasingDoubleKeyFrame KeyTime="0:0:0.15" Value="1.08">
+                                                    <EasingDoubleKeyFrame.EasingFunction>
+                                                        <CubicEase EasingMode="EaseOut" />
+                                                    </EasingDoubleKeyFrame.EasingFunction>
+                                                </EasingDoubleKeyFrame>
+                                            </DoubleAnimationUsingKeyFrames>
+                                            <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="(Button.RenderTransform).(ScaleTransform.ScaleY)">
+                                                <EasingDoubleKeyFrame KeyTime="0:0:0.15" Value="1.08">
+                                                    <EasingDoubleKeyFrame.EasingFunction>
+                                                        <CubicEase EasingMode="EaseOut" />
+                                                    </EasingDoubleKeyFrame.EasingFunction>
+                                                </EasingDoubleKeyFrame>
+                                            </DoubleAnimationUsingKeyFrames>
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </Trigger.EnterActions>
+                                <Trigger.ExitActions>
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="(Button.RenderTransform).(ScaleTransform.ScaleX)">
+                                                <EasingDoubleKeyFrame KeyTime="0:0:0.15" Value="1">
+                                                    <EasingDoubleKeyFrame.EasingFunction>
+                                                        <CubicEase EasingMode="EaseOut" />
+                                                    </EasingDoubleKeyFrame.EasingFunction>
+                                                </EasingDoubleKeyFrame>
+                                            </DoubleAnimationUsingKeyFrames>
+                                            <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="(Button.RenderTransform).(ScaleTransform.ScaleY)">
+                                                <EasingDoubleKeyFrame KeyTime="0:0:0.15" Value="1">
+                                                    <EasingDoubleKeyFrame.EasingFunction>
+                                                        <CubicEase EasingMode="EaseOut" />
+                                                    </EasingDoubleKeyFrame.EasingFunction>
+                                                </EasingDoubleKeyFrame>
+                                            </DoubleAnimationUsingKeyFrames>
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </Trigger.ExitActions>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="WhiteButtonStyle" TargetType="{x:Type Button}">
+            <Setter Property="FocusVisualStyle" Value="{StaticResource FocusVisual}" />
+            <Setter Property="FontFamily" Value="/GOATflow;component/Assets/Fonts/Poppins/#Poppins Semibold" />
+            <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="RenderTransformOrigin" Value="0.5,0.5" />
+            <Setter Property="UseLayoutRounding" Value="True" />
+            <Setter Property="RenderTransform">
+                <Setter.Value>
+                    <ScaleTransform ScaleX="1" ScaleY="1" />
+                </Setter.Value>
+            </Setter>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type Button}">
+                        <Border
+                            x:Name="border"
+                            Background="{TemplateBinding Background}"
+                            BorderThickness="1"
+                            CornerRadius="3"
+                            SnapsToDevicePixels="true">
+                            <Border.BorderBrush>
+                                <LinearGradientBrush StartPoint="0.5,0" EndPoint="0.5,1">
+                                    <GradientStop x:Name="g1" Color="#FFFFFF" />
+                                    <GradientStop x:Name="g2" Offset="1" Color="#CCCCCC" />
+                                </LinearGradientBrush>
+                            </Border.BorderBrush>
+                            <ContentPresenter
+                                x:Name="contentPresenter"
+                                Margin="{TemplateBinding Padding}"
+                                HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                                Focusable="False"
+                                RecognizesAccessKey="True"
+                                SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" />
+                            <Border.Effect>
+                                <DropShadowEffect BlurRadius="2" ShadowDepth="0" />
+                            </Border.Effect>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Trigger.EnterActions>
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="(Button.RenderTransform).(ScaleTransform.ScaleX)">
+                                                <EasingDoubleKeyFrame KeyTime="0:0:0.15" Value="1.08">
+                                                    <EasingDoubleKeyFrame.EasingFunction>
+                                                        <CubicEase EasingMode="EaseOut" />
+                                                    </EasingDoubleKeyFrame.EasingFunction>
+                                                </EasingDoubleKeyFrame>
+                                            </DoubleAnimationUsingKeyFrames>
+                                            <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="(Button.RenderTransform).(ScaleTransform.ScaleY)">
+                                                <EasingDoubleKeyFrame KeyTime="0:0:0.15" Value="1.08">
+                                                    <EasingDoubleKeyFrame.EasingFunction>
+                                                        <CubicEase EasingMode="EaseOut" />
+                                                    </EasingDoubleKeyFrame.EasingFunction>
+                                                </EasingDoubleKeyFrame>
+                                            </DoubleAnimationUsingKeyFrames>
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </Trigger.EnterActions>
+                                <Trigger.ExitActions>
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="(Button.RenderTransform).(ScaleTransform.ScaleX)">
+                                                <EasingDoubleKeyFrame KeyTime="0:0:0.15" Value="1">
+                                                    <EasingDoubleKeyFrame.EasingFunction>
+                                                        <CubicEase EasingMode="EaseOut" />
+                                                    </EasingDoubleKeyFrame.EasingFunction>
+                                                </EasingDoubleKeyFrame>
+                                            </DoubleAnimationUsingKeyFrames>
+                                            <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="(Button.RenderTransform).(ScaleTransform.ScaleY)">
+                                                <EasingDoubleKeyFrame KeyTime="0:0:0.15" Value="1">
+                                                    <EasingDoubleKeyFrame.EasingFunction>
+                                                        <CubicEase EasingMode="EaseOut" />
+                                                    </EasingDoubleKeyFrame.EasingFunction>
+                                                </EasingDoubleKeyFrame>
+                                            </DoubleAnimationUsingKeyFrames>
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </Trigger.ExitActions>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <SolidColorBrush x:Key="ProgressBar.Progress" Color="#FF06B025" />
+        <SolidColorBrush x:Key="ProgressBar.Background" Color="#FFE6E6E6" />
+        <SolidColorBrush x:Key="ProgressBar.Border" Color="#FFBCBCBC" />
+        <Style x:Key="FocusVisual1">
+            <Setter Property="Control.Template">
+                <Setter.Value>
+                    <ControlTemplate>
+                        <Rectangle
+                            Margin="2"
+                            SnapsToDevicePixels="true"
+                            Stroke="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}"
+                            StrokeDashArray="1 2"
+                            StrokeThickness="1" />
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <SolidColorBrush x:Key="Button.Static.Background" Color="#FFDDDDDD" />
+        <SolidColorBrush x:Key="Button.Static.Border" Color="#FF707070" />
+        <SolidColorBrush x:Key="Button.MouseOver.Background" Color="#FFBEE6FD" />
+        <SolidColorBrush x:Key="Button.MouseOver.Border" Color="#FF3C7FB1" />
+        <SolidColorBrush x:Key="Button.Pressed.Background" Color="#FFC4E5F6" />
+        <SolidColorBrush x:Key="Button.Pressed.Border" Color="#FF2C628B" />
+        <SolidColorBrush x:Key="Button.Disabled.Background" Color="#FFF4F4F4" />
+        <SolidColorBrush x:Key="Button.Disabled.Border" Color="#FFADB2B5" />
+        <SolidColorBrush x:Key="Button.Disabled.Foreground" Color="#FF838383" />
+        <Style x:Key="FlatButtonStyle" TargetType="{x:Type Button}">
+            <Setter Property="FocusVisualStyle" Value="{StaticResource FocusVisual1}" />
+            <Setter Property="Background" Value="{StaticResource Button.Static.Background}" />
+            <Setter Property="BorderBrush" Value="{StaticResource Button.Static.Border}" />
+            <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="Padding" Value="1" />
+            <Setter Property="RenderTransform">
+                <Setter.Value>
+                    <ScaleTransform ScaleX="1" ScaleY="1" />
+                </Setter.Value>
+            </Setter>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type Button}">
+                        <Border
+                            x:Name="border"
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            SnapsToDevicePixels="true">
+                            <ContentPresenter
+                                x:Name="contentPresenter"
+                                Margin="{TemplateBinding Padding}"
+                                HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                                Focusable="False"
+                                RecognizesAccessKey="True"
+                                SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Trigger.EnterActions>
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="FontSize">
+                                                <EasingDoubleKeyFrame KeyTime="0:0:0.1" Value="14" />
+                                            </DoubleAnimationUsingKeyFrames>
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </Trigger.EnterActions>
+                                <Trigger.ExitActions>
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="FontSize">
+                                                <EasingDoubleKeyFrame KeyTime="0:0:0.1" Value="12" />
+                                            </DoubleAnimationUsingKeyFrames>
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </Trigger.ExitActions>
+                            </Trigger>
+
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="ProgressBarStyle" TargetType="{x:Type ProgressBar}">
+            <Setter Property="Foreground" Value="{StaticResource ProgressBar.Progress}" />
+            <Setter Property="Background" Value="{StaticResource ProgressBar.Background}" />
+            <Setter Property="BorderBrush" Value="{StaticResource ProgressBar.Border}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type ProgressBar}">
+                        <Grid x:Name="TemplateRoot">
+                            <Border
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="#CCCCCC"
+                                BorderThickness="1"
+                                CornerRadius="5" />
+                            <Rectangle x:Name="PART_Track" />
+                            <Grid
+                                x:Name="PART_Indicator"
+                                HorizontalAlignment="Left"
+                                ClipToBounds="true">
+                                <Border
+                                    x:Name="Indicator"
+                                    Margin="1"
+                                    Background="{TemplateBinding Foreground}"
+                                    CornerRadius="5" />
+                                <Border
+                                    x:Name="Animation"
+                                    Margin="1"
+                                    Background="{TemplateBinding Foreground}"
+                                    CornerRadius="5"
+                                    RenderTransformOrigin="0.5,0.5">
+                                    <Border.RenderTransform>
+                                        <TransformGroup>
+                                            <ScaleTransform />
+                                            <SkewTransform />
+                                            <RotateTransform />
+                                            <TranslateTransform />
+                                        </TransformGroup>
+                                    </Border.RenderTransform>
+                                </Border>
+                            </Grid>
+                            <VisualStateManager.VisualStateGroups>
+                                <VisualStateGroup x:Name="CommonStates">
+                                    <VisualState x:Name="Determinate" />
+                                    <VisualState x:Name="Indeterminate">
+                                        <Storyboard RepeatBehavior="Forever">
+                                            <DoubleAnimationUsingKeyFrames Storyboard.TargetName="Animation" Storyboard.TargetProperty="(UIElement.RenderTransform).(TransformGroup.Children)[0].(ScaleTransform.ScaleX)">
+                                                <EasingDoubleKeyFrame KeyTime="0" Value="0.25" />
+                                                <EasingDoubleKeyFrame KeyTime="0:0:1" Value="0.25" />
+                                                <EasingDoubleKeyFrame KeyTime="0:0:2" Value="0.25" />
+                                            </DoubleAnimationUsingKeyFrames>
+                                            <PointAnimationUsingKeyFrames Storyboard.TargetName="Animation" Storyboard.TargetProperty="(UIElement.RenderTransformOrigin)">
+                                                <EasingPointKeyFrame KeyTime="0" Value="-0.5,0.5" />
+                                                <EasingPointKeyFrame KeyTime="0:0:1" Value="0.5,0.5" />
+                                                <EasingPointKeyFrame KeyTime="0:0:2" Value="1.5,0.5" />
+                                            </PointAnimationUsingKeyFrames>
+                                        </Storyboard>
+                                    </VisualState>
+                                </VisualStateGroup>
+                            </VisualStateManager.VisualStateGroups>
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="Orientation" Value="Vertical">
+                                <Setter TargetName="TemplateRoot" Property="LayoutTransform">
+                                    <Setter.Value>
+                                        <RotateTransform Angle="-90" />
+                                    </Setter.Value>
+                                </Setter>
+                            </Trigger>
+                            <Trigger Property="IsIndeterminate" Value="true">
+                                <Setter TargetName="Indicator" Property="Visibility" Value="Collapsed" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Application.Resources>
+</Application>
