@@ -24,8 +24,9 @@ import java.util.List;
  *
  * Role rules:
  *   POST /api/orders                        → MERCHANT (place order from own account)
- *   GET  /api/orders/{id}                   → any authenticated user (track order)
+ *   GET  /api/orders/incomplete             → ADMIN, MANAGER (orders not yet completed)
  *   GET  /api/orders/merchant/{merchantId}  → MERCHANT (own), ADMIN, MANAGER
+ *   GET  /api/orders/{id}                   → any authenticated user (track order)
  *   GET  /api/orders                        → ADMIN, MANAGER (all orders)
  *   PUT  /api/orders/{id}/status            → ADMIN, MANAGER (update status)
  *   PUT  /api/orders/{id}/dispatch          → ADMIN, MANAGER (dispatch with courier details)
@@ -70,6 +71,51 @@ public class OrderController {
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
+    // ── Incomplete Orders — MUST be before /{id} to avoid route shadowing ────
+
+    /**
+     * GET /api/orders/incomplete
+     * Returns all orders that are not yet DELIVERED or CANCELLED.
+     * Per the marking sheet: "Observing the list of orders taken but not completed."
+     *
+     * IMPORTANT: This endpoint is defined BEFORE /{id} because Spring matches
+     * routes top-down. If /{id} came first, "/incomplete" would be captured
+     * as a path variable and fail with a 404.
+     */
+    @GetMapping("/incomplete")
+    public ResponseEntity<List<OrderDTO>> getIncompleteOrders(Authentication auth) {
+        requireRole(auth, User.Role.ADMIN, User.Role.MANAGER);
+        return ResponseEntity.ok(orderService.getIncompleteOrders());
+    }
+
+    // ── Order History — Merchant (UC-33) ──────────────────────────────────────
+
+    /**
+     * GET /api/orders/merchant/{merchantId}
+     * Returns all orders for a specific merchant, newest first.
+     * Merchants can only query their own history; admins/managers can query any.
+     *
+     * Also defined BEFORE /{id} — "/merchant" would otherwise be captured
+     * as a path variable.
+     */
+    @GetMapping("/merchant/{merchantId}")
+    public ResponseEntity<List<OrderDTO>> getOrdersByMerchant(
+            @PathVariable Integer merchantId,
+            Authentication auth) {
+
+        if (hasRole(auth, User.Role.MERCHANT)) {
+            User user = resolveUser(auth);
+            Merchant merchant = merchantRepository.findByUser(user).orElse(null);
+            if (merchant == null || !merchant.getMerchantId().equals(merchantId)) {
+                throw new AccessDeniedException("You can only view your own orders.");
+            }
+        } else {
+            requireRole(auth, User.Role.ADMIN, User.Role.MANAGER);
+        }
+
+        return ResponseEntity.ok(orderService.getOrdersByMerchant(merchantId));
+    }
+
     // ── Track Order (UC-17) ───────────────────────────────────────────────────
 
     /**
@@ -97,44 +143,8 @@ public class OrderController {
         return ResponseEntity.ok(order);
     }
 
-    // ── Order History — Merchant (UC-33) ──────────────────────────────────────
-
-    /**
-     * GET /api/orders/merchant/{merchantId}
-     * Returns all orders for a specific merchant, newest first.
-     * Merchants can only query their own history; admins/managers can query any.
-     */
-    @GetMapping("/merchant/{merchantId}")
-    public ResponseEntity<List<OrderDTO>> getOrdersByMerchant(
-            @PathVariable Integer merchantId,
-            Authentication auth) {
-
-        if (hasRole(auth, User.Role.MERCHANT)) {
-            User user = resolveUser(auth);
-            Merchant merchant = merchantRepository.findByUser(user).orElse(null);
-            if (merchant == null || !merchant.getMerchantId().equals(merchantId)) {
-                throw new AccessDeniedException("You can only view your own orders.");
-            }
-        } else {
-            requireRole(auth, User.Role.ADMIN, User.Role.MANAGER);
-        }
-
-        return ResponseEntity.ok(orderService.getOrdersByMerchant(merchantId));
-    }
-
     // ── All Orders — Admin (Past Orders screen) ──────────────────────────────
 
-    /**
-     * GET /api/orders/incomplete
-     * Returns all orders that are not yet DELIVERED or CANCELLED.
-     * Per the marking sheet: "Observing the list of orders taken but not completed."
-     */
-    @GetMapping("/incomplete")
-    public ResponseEntity<List<OrderDTO>> getIncompleteOrders(Authentication auth) {
-        requireRole(auth, User.Role.ADMIN, User.Role.MANAGER);
-        return ResponseEntity.ok(orderService.getIncompleteOrders());
-    }
- 
     /**
      * GET /api/orders
      * Returns all orders. Optionally filter with ?status=ACCEPTED etc.
@@ -218,10 +228,6 @@ public class OrderController {
                 "Role " + callerRole + " is not permitted to perform this action.");
     }
 
-    /**
-     * Checks if the authenticated user has a specific role without throwing.
-     * Used for conditional logic (e.g. merchants can only see own orders).
-     */
     private boolean hasRole(Authentication auth, User.Role role) {
         String roleStr = auth.getAuthorities().iterator().next()
                 .getAuthority().replace("ROLE_", "");
