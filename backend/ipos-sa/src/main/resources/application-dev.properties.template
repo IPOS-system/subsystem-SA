@@ -1,0 +1,20 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Development profile — use this to avoid setting environment variables.
+#
+# HOW TO USE:
+#   Option A: Run with the dev profile active:
+#             ./mvnw spring-boot:run -Dspring-boot.run.profiles=dev
+#
+#   Option B: In IntelliJ: Run > Edit Configurations > Active profiles: dev
+#
+# SETUP:
+#   1. Change the username and password below to match YOUR MySQL installation
+#   2. That's it — no environment variables needed
+# ─────────────────────────────────────────────────────────────────────────────
+
+# Override database credentials for local development
+spring.datasource.username=root
+spring.datasource.password=CHANGE_ME_TO_YOUR_MYSQL_PASSWORD
+
+# JWT secret for local development (doesn't matter what it is, just 32+ chars)
+jwt.secret=ipos-sa-local-dev-secret-key-minimum-32-characters

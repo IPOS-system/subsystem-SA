@@ -9,260 +9,282 @@ import com.ipos.ipos_sa.exception.ValidationException;
 import com.ipos.ipos_sa.repository.AuditLogRepository;
 import com.ipos.ipos_sa.repository.CatalogueItemRepository;
 import com.ipos.ipos_sa.repository.OrderItemRepository;
+import java.math.BigDecimal;
+import java.util.List;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.math.BigDecimal;
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class CatalogueService {
 
-    private final CatalogueItemRepository catalogueItemRepository;
-    private final OrderItemRepository     orderItemRepository;
-    private final AuditLogRepository      auditLogRepository;
+  private final CatalogueItemRepository catalogueItemRepository;
+  private final OrderItemRepository orderItemRepository;
+  private final AuditLogRepository auditLogRepository;
 
-    // ── Merchant-facing (active products only) ────────────────────────────────
+  // ── Merchant-facing (active products only) ────────────────────────────────
 
-    /**
-     * Returns all active catalogue items visible to merchants (UC-13).
-     * Inactive/soft-deleted products are excluded.
-     */
-    public List<CatalogueItemDTO> getActiveCatalogue() {
-        return catalogueItemRepository.findByIsActiveTrue().stream()
-                .map(this::toMerchantDTO)
-                .collect(Collectors.toList());
+  /**
+   * Returns all active catalogue items visible to merchants (UC-13). Inactive/soft-deleted products
+   * are excluded.
+   */
+  public List<CatalogueItemDTO> getActiveCatalogue() {
+    return catalogueItemRepository.findByIsActiveTrue().stream()
+        .map(this::toMerchantDTO)
+        .collect(Collectors.toList());
+  }
+
+  /**
+   * Keyword search across active products — matches product ID or description. Powers the search
+   * bar on the Browse Catalogue screen.
+   */
+  public List<CatalogueItemDTO> searchCatalogue(String term) {
+    return catalogueItemRepository.searchActive(term).stream()
+        .map(this::toMerchantDTO)
+        .collect(Collectors.toList());
+  }
+
+  // ── Admin-facing (all products, full detail) ──────────────────────────────
+
+  /**
+   * Returns all catalogue items including inactive ones, with internal stock management fields.
+   * Used by the Catalogue Management screen.
+   */
+  public List<AdminCatalogueItemDTO> getAllCatalogueAdmin() {
+    return catalogueItemRepository.findAll().stream()
+        .map(this::toAdminDTO)
+        .collect(Collectors.toList());
+  }
+
+  /** Returns a single product by ID with full admin detail. */
+  public AdminCatalogueItemDTO getProductAdmin(String productId) {
+    CatalogueItem item =
+        catalogueItemRepository
+            .findById(productId)
+            .orElseThrow(() -> new ResourceNotFoundException("CatalogueItem", productId));
+    return toAdminDTO(item);
+  }
+
+  // ── Add Item (UC-10) ──────────────────────────────────────────────────────
+
+  /**
+   * Adds a new product to the catalogue. Product ID must be unique. Defaults reorderBufferPct to
+   * 10% if not provided.
+   */
+  @Transactional
+  public AdminCatalogueItemDTO addProduct(CreateProductRequest request, User actingUser) {
+
+    if (catalogueItemRepository.existsById(request.getProductId())) {
+      throw new ValidationException("Product ID already exists: " + request.getProductId());
     }
 
-    /**
-     * Keyword search across active products — matches product ID or description.
-     * Powers the search bar on the Browse Catalogue screen.
-     */
-    public List<CatalogueItemDTO> searchCatalogue(String term) {
-        return catalogueItemRepository.searchActive(term).stream()
-                .map(this::toMerchantDTO)
-                .collect(Collectors.toList());
-    }
+    BigDecimal bufferPct =
+        request.getReorderBufferPct() != null
+            ? request.getReorderBufferPct()
+            : new BigDecimal("10.00");
 
-    // ── Admin-facing (all products, full detail) ──────────────────────────────
+    CatalogueItem item =
+        CatalogueItem.builder()
+            .productId(request.getProductId())
+            .description(request.getDescription())
+            .packageType(request.getPackageType())
+            .unit(request.getUnit())
+            .unitsPerPack(request.getUnitsPerPack())
+            .unitPrice(request.getUnitPrice())
+            .availability(request.getAvailability())
+            .minStockLevel(request.getMinStockLevel())
+            .reorderBufferPct(bufferPct)
+            .isActive(true)
+            .build();
 
-    /**
-     * Returns all catalogue items including inactive ones, with internal
-     * stock management fields. Used by the Catalogue Management screen.
-     */
-    public List<AdminCatalogueItemDTO> getAllCatalogueAdmin() {
-        return catalogueItemRepository.findAll().stream()
-                .map(this::toAdminDTO)
-                .collect(Collectors.toList());
-    }
+    catalogueItemRepository.save(item);
 
-    /**
-     * Returns a single product by ID with full admin detail.
-     */
-    public AdminCatalogueItemDTO getProductAdmin(String productId) {
-        CatalogueItem item = catalogueItemRepository.findById(productId)
-                .orElseThrow(() -> new ResourceNotFoundException("CatalogueItem", productId));
-        return toAdminDTO(item);
-    }
+    audit(
+        actingUser,
+        "ADD_CATALOGUE_ITEM",
+        "catalogue",
+        request.getProductId(),
+        "Added product: " + request.getDescription());
 
-    // ── Add Item (UC-10) ──────────────────────────────────────────────────────
+    log.info("Product added: {}", request.getProductId());
+    return toAdminDTO(item);
+  }
 
-    /**
-     * Adds a new product to the catalogue.
-     * Product ID must be unique. Defaults reorderBufferPct to 10% if not provided.
-     */
-    @Transactional
-    public AdminCatalogueItemDTO addProduct(CreateProductRequest request, User actingUser) {
+  // ── Update Item (UC-11) ───────────────────────────────────────────────────
 
-        if (catalogueItemRepository.existsById(request.getProductId())) {
-            throw new ValidationException(
-                    "Product ID already exists: " + request.getProductId());
-        }
+  /** Partially updates a product's details. Only non-null fields in the request are applied. */
+  @Transactional
+  public AdminCatalogueItemDTO updateProduct(
+      String productId, UpdateProductRequest request, User actingUser) {
 
-        BigDecimal bufferPct = request.getReorderBufferPct() != null
-                ? request.getReorderBufferPct()
-                : new BigDecimal("10.00");
+    CatalogueItem item =
+        catalogueItemRepository
+            .findById(productId)
+            .orElseThrow(() -> new ResourceNotFoundException("CatalogueItem", productId));
 
-        CatalogueItem item = CatalogueItem.builder()
-                .productId(request.getProductId())
-                .description(request.getDescription())
-                .packageType(request.getPackageType())
-                .unit(request.getUnit())
-                .unitsPerPack(request.getUnitsPerPack())
-                .unitPrice(request.getUnitPrice())
-                .availability(request.getAvailability())
-                .minStockLevel(request.getMinStockLevel())
-                .reorderBufferPct(bufferPct)
-                .isActive(true)
-                .build();
+    if (request.getDescription() != null) item.setDescription(request.getDescription());
+    if (request.getPackageType() != null) item.setPackageType(request.getPackageType());
+    if (request.getUnit() != null) item.setUnit(request.getUnit());
+    if (request.getUnitsPerPack() != null) item.setUnitsPerPack(request.getUnitsPerPack());
+    if (request.getUnitPrice() != null) item.setUnitPrice(request.getUnitPrice());
+    if (request.getMinStockLevel() != null) item.setMinStockLevel(request.getMinStockLevel());
+    if (request.getReorderBufferPct() != null)
+      item.setReorderBufferPct(request.getReorderBufferPct());
 
-        catalogueItemRepository.save(item);
+    catalogueItemRepository.save(item);
 
-        audit(actingUser, "ADD_CATALOGUE_ITEM",
-                "catalogue", request.getProductId(),
-                "Added product: " + request.getDescription());
+    audit(
+        actingUser,
+        "UPDATE_CATALOGUE_ITEM",
+        "catalogue",
+        productId,
+        "Updated product: " + item.getDescription());
 
-        log.info("Product added: {}", request.getProductId());
-        return toAdminDTO(item);
-    }
+    return toAdminDTO(item);
+  }
 
-    // ── Update Item (UC-11) ───────────────────────────────────────────────────
+  // ── Delete Item / Soft-Delete (UC-12) ─────────────────────────────────────
 
-    /**
-     * Partially updates a product's details.
-     * Only non-null fields in the request are applied.
-     */
-    @Transactional
-    public AdminCatalogueItemDTO updateProduct(String productId,
-                                                UpdateProductRequest request,
-                                                User actingUser) {
+  /**
+   * Soft-deletes a product by setting isActive = false. The product remains in the database for
+   * order history integrity but no longer appears in the merchant-facing catalogue.
+   */
+  @Transactional
+  public void deactivateProduct(String productId, User actingUser) {
 
-        CatalogueItem item = catalogueItemRepository.findById(productId)
-                .orElseThrow(() -> new ResourceNotFoundException("CatalogueItem", productId));
+    CatalogueItem item =
+        catalogueItemRepository
+            .findById(productId)
+            .orElseThrow(() -> new ResourceNotFoundException("CatalogueItem", productId));
 
-        if (request.getDescription()     != null) item.setDescription(request.getDescription());
-        if (request.getPackageType()     != null) item.setPackageType(request.getPackageType());
-        if (request.getUnit()            != null) item.setUnit(request.getUnit());
-        if (request.getUnitsPerPack()    != null) item.setUnitsPerPack(request.getUnitsPerPack());
-        if (request.getUnitPrice()       != null) item.setUnitPrice(request.getUnitPrice());
-        if (request.getMinStockLevel()   != null) item.setMinStockLevel(request.getMinStockLevel());
-        if (request.getReorderBufferPct()!= null) item.setReorderBufferPct(request.getReorderBufferPct());
+    item.setIsActive(false);
+    catalogueItemRepository.save(item);
 
-        catalogueItemRepository.save(item);
+    audit(
+        actingUser,
+        "DEACTIVATE_CATALOGUE_ITEM",
+        "catalogue",
+        productId,
+        "Deactivated product: " + item.getDescription());
 
-        audit(actingUser, "UPDATE_CATALOGUE_ITEM",
-                "catalogue", productId,
-                "Updated product: " + item.getDescription());
+    log.info("Product deactivated: {}", productId);
+  }
 
-        return toAdminDTO(item);
-    }
+  /** Re-activates a previously deactivated product. */
+  @Transactional
+  public void reactivateProduct(String productId, User actingUser) {
 
-    // ── Delete Item / Soft-Delete (UC-12) ─────────────────────────────────────
+    CatalogueItem item =
+        catalogueItemRepository
+            .findById(productId)
+            .orElseThrow(() -> new ResourceNotFoundException("CatalogueItem", productId));
 
-    /**
-     * Soft-deletes a product by setting isActive = false.
-     * The product remains in the database for order history integrity but
-     * no longer appears in the merchant-facing catalogue.
-     */
-    @Transactional
-    public void deactivateProduct(String productId, User actingUser) {
+    item.setIsActive(true);
+    catalogueItemRepository.save(item);
 
-        CatalogueItem item = catalogueItemRepository.findById(productId)
-                .orElseThrow(() -> new ResourceNotFoundException("CatalogueItem", productId));
+    audit(
+        actingUser,
+        "REACTIVATE_CATALOGUE_ITEM",
+        "catalogue",
+        productId,
+        "Reactivated product: " + item.getDescription());
 
-        item.setIsActive(false);
-        catalogueItemRepository.save(item);
+    log.info("Product reactivated: {}", productId);
+  }
 
-        audit(actingUser, "DEACTIVATE_CATALOGUE_ITEM",
-                "catalogue", productId,
-                "Deactivated product: " + item.getDescription());
+  // ── Stock Delivery / Renew Stock (UC-34) ──────────────────────────────────
 
-        log.info("Product deactivated: {}", productId);
-    }
+  /**
+   * Records a stock delivery, increasing the product's availability. Used when goods arrive at the
+   * InfoPharma warehouse.
+   */
+  @Transactional
+  public AdminCatalogueItemDTO addStock(
+      String productId, StockDeliveryRequest request, User actingUser) {
 
-    /**
-     * Re-activates a previously deactivated product.
-     */
-    @Transactional
-    public void reactivateProduct(String productId, User actingUser) {
+    CatalogueItem item =
+        catalogueItemRepository
+            .findById(productId)
+            .orElseThrow(() -> new ResourceNotFoundException("CatalogueItem", productId));
 
-        CatalogueItem item = catalogueItemRepository.findById(productId)
-                .orElseThrow(() -> new ResourceNotFoundException("CatalogueItem", productId));
+    int oldAvailability = item.getAvailability();
+    item.setAvailability(oldAvailability + request.getQuantity());
+    catalogueItemRepository.save(item);
 
-        item.setIsActive(true);
-        catalogueItemRepository.save(item);
+    audit(
+        actingUser,
+        "STOCK_DELIVERY",
+        "catalogue",
+        productId,
+        "Stock delivery: +"
+            + request.getQuantity()
+            + " (was "
+            + oldAvailability
+            + ", now "
+            + item.getAvailability()
+            + ")");
 
-        audit(actingUser, "REACTIVATE_CATALOGUE_ITEM",
-                "catalogue", productId,
-                "Reactivated product: " + item.getDescription());
+    log.info("Stock delivery: {} += {}", productId, request.getQuantity());
+    return toAdminDTO(item);
+  }
 
-        log.info("Product reactivated: {}", productId);
-    }
+  // ── Low Stock Check (UC-35, UC-46) ────────────────────────────────────────
 
-    // ── Stock Delivery / Renew Stock (UC-34) ──────────────────────────────────
+  /**
+   * Returns all active products currently below their minimum stock level. Used by the
+   * NotificationController and RPT-07 (Low Stock Level Report).
+   */
+  public List<CatalogueItem> getLowStockProducts() {
+    return catalogueItemRepository.findLowStockProducts();
+  }
 
-    /**
-     * Records a stock delivery, increasing the product's availability.
-     * Used when goods arrive at the InfoPharma warehouse.
-     */
-    @Transactional
-    public AdminCatalogueItemDTO addStock(String productId,
-                                           StockDeliveryRequest request,
-                                           User actingUser) {
+  // ── Mappers ───────────────────────────────────────────────────────────────
 
-        CatalogueItem item = catalogueItemRepository.findById(productId)
-                .orElseThrow(() -> new ResourceNotFoundException("CatalogueItem", productId));
+  private CatalogueItemDTO toMerchantDTO(CatalogueItem item) {
+    return CatalogueItemDTO.builder()
+        .productId(item.getProductId())
+        .description(item.getDescription())
+        .packageType(item.getPackageType())
+        .unit(item.getUnit())
+        .unitsPerPack(item.getUnitsPerPack())
+        .unitPrice(item.getUnitPrice())
+        .availability(item.getAvailability())
+        .build();
+  }
 
-        int oldAvailability = item.getAvailability();
-        item.setAvailability(oldAvailability + request.getQuantity());
-        catalogueItemRepository.save(item);
+  private AdminCatalogueItemDTO toAdminDTO(CatalogueItem item) {
+    return AdminCatalogueItemDTO.builder()
+        .productId(item.getProductId())
+        .description(item.getDescription())
+        .packageType(item.getPackageType())
+        .unit(item.getUnit())
+        .unitsPerPack(item.getUnitsPerPack())
+        .unitPrice(item.getUnitPrice())
+        .availability(item.getAvailability())
+        .isActive(item.getIsActive())
+        .minStockLevel(item.getMinStockLevel())
+        .reorderBufferPct(item.getReorderBufferPct())
+        .createdAt(item.getCreatedAt())
+        .updatedAt(item.getUpdatedAt())
+        .build();
+  }
 
-        audit(actingUser, "STOCK_DELIVERY",
-                "catalogue", productId,
-                "Stock delivery: +" + request.getQuantity()
-                        + " (was " + oldAvailability + ", now " + item.getAvailability() + ")");
+  // ── Audit Helper ──────────────────────────────────────────────────────────
 
-        log.info("Stock delivery: {} += {}", productId, request.getQuantity());
-        return toAdminDTO(item);
-    }
-
-    // ── Low Stock Check (UC-35, UC-46) ────────────────────────────────────────
-
-    /**
-     * Returns all active products currently below their minimum stock level.
-     * Used by the NotificationController and RPT-07 (Low Stock Level Report).
-     */
-    public List<CatalogueItem> getLowStockProducts() {
-        return catalogueItemRepository.findLowStockProducts();
-    }
-
-    // ── Mappers ───────────────────────────────────────────────────────────────
-
-    private CatalogueItemDTO toMerchantDTO(CatalogueItem item) {
-        return CatalogueItemDTO.builder()
-                .productId(item.getProductId())
-                .description(item.getDescription())
-                .packageType(item.getPackageType())
-                .unit(item.getUnit())
-                .unitsPerPack(item.getUnitsPerPack())
-                .unitPrice(item.getUnitPrice())
-                .availability(item.getAvailability())
-                .build();
-    }
-
-    private AdminCatalogueItemDTO toAdminDTO(CatalogueItem item) {
-        return AdminCatalogueItemDTO.builder()
-                .productId(item.getProductId())
-                .description(item.getDescription())
-                .packageType(item.getPackageType())
-                .unit(item.getUnit())
-                .unitsPerPack(item.getUnitsPerPack())
-                .unitPrice(item.getUnitPrice())
-                .availability(item.getAvailability())
-                .isActive(item.getIsActive())
-                .minStockLevel(item.getMinStockLevel())
-                .reorderBufferPct(item.getReorderBufferPct())
-                .createdAt(item.getCreatedAt())
-                .updatedAt(item.getUpdatedAt())
-                .build();
-    }
-
-    // ── Audit Helper ──────────────────────────────────────────────────────────
-
-    private void audit(User actor, String action, String targetType,
-                       String targetId, String details) {
-        AuditLog entry = AuditLog.builder()
-                .user(actor)
-                .action(action)
-                .targetType(targetType)
-                .targetId(targetId)
-                .details(details)
-                .build();
-        auditLogRepository.save(entry);
-    }
+  private void audit(
+      User actor, String action, String targetType, String targetId, String details) {
+    AuditLog entry =
+        AuditLog.builder()
+            .user(actor)
+            .action(action)
+            .targetType(targetType)
+            .targetId(targetId)
+            .details(details)
+            .build();
+    auditLogRepository.save(entry);
+  }
 }

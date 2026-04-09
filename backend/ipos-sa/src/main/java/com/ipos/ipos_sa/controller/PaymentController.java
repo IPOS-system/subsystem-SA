@@ -17,11 +17,10 @@ import org.springframework.web.bind.annotation.*;
 /**
  * REST controller for payment recording.
  *
- * Per the brief: payments are made externally (bank transfer, card, cheque)
- * and then manually entered into IPOS-SA by the accounting department.
+ * <p>Per the brief: payments are made externally (bank transfer, card, cheque) and then manually
+ * entered into IPOS-SA by the accounting department.
  *
- * Role rules:
- *   POST /api/payments → ACCOUNTANT, ADMIN only
+ * <p>Role rules: POST /api/payments → ACCOUNTANT, ADMIN only
  */
 @RestController
 @RequestMapping("/api/payments")
@@ -29,47 +28,44 @@ import org.springframework.web.bind.annotation.*;
 @CrossOrigin(origins = "*")
 public class PaymentController {
 
-    private final PaymentService paymentService;
-    private final UserRepository userRepository;
+  private final PaymentService paymentService;
+  private final UserRepository userRepository;
 
-    /**
-     * POST /api/payments
-     * Records a payment against a specific invoice (UC-41).
-     *
-     * On success the response contains the updated invoice showing the
-     * new amount_due and payment status, so the frontend can refresh
-     * immediately without a second API call.
-     */
-    @PostMapping
-    public ResponseEntity<InvoiceDTO> recordPayment(
-            @Valid @RequestBody RecordPaymentRequest request,
-            Authentication auth) {
+  /**
+   * POST /api/payments Records a payment against a specific invoice (UC-41).
+   *
+   * <p>On success the response contains the updated invoice showing the new amount_due and payment
+   * status, so the frontend can refresh immediately without a second API call.
+   */
+  @PostMapping
+  public ResponseEntity<InvoiceDTO> recordPayment(
+      @Valid @RequestBody RecordPaymentRequest request, Authentication auth) {
 
-        requireRole(auth, User.Role.ACCOUNTANT, User.Role.ADMIN);
-        User actingUser = resolveUser(auth);
+    requireRole(auth, User.Role.ACCOUNTANT, User.Role.ADMIN);
+    User actingUser = resolveUser(auth);
 
-        InvoiceDTO updated = paymentService.recordPayment(request, actingUser);
-        return ResponseEntity.status(HttpStatus.CREATED).body(updated);
+    InvoiceDTO updated = paymentService.recordPayment(request, actingUser);
+    return ResponseEntity.status(HttpStatus.CREATED).body(updated);
+  }
+
+  // ── Helpers ───────────────────────────────────────────────────────────────
+
+  private User resolveUser(Authentication auth) {
+    String username = auth.getName();
+    return userRepository
+        .findByUsername(username)
+        .orElseThrow(
+            () -> new ResourceNotFoundException("Authenticated user not found: " + username));
+  }
+
+  private void requireRole(Authentication auth, User.Role... permitted) {
+    String roleStr = auth.getAuthorities().iterator().next().getAuthority().replace("ROLE_", "");
+    User.Role callerRole = User.Role.valueOf(roleStr);
+
+    for (User.Role r : permitted) {
+      if (r == callerRole) return;
     }
-
-    // ── Helpers ───────────────────────────────────────────────────────────────
-
-    private User resolveUser(Authentication auth) {
-        String username = auth.getName();
-        return userRepository.findByUsername(username)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Authenticated user not found: " + username));
-    }
-
-    private void requireRole(Authentication auth, User.Role... permitted) {
-        String roleStr = auth.getAuthorities().iterator().next()
-                .getAuthority().replace("ROLE_", "");
-        User.Role callerRole = User.Role.valueOf(roleStr);
-
-        for (User.Role r : permitted) {
-            if (r == callerRole) return;
-        }
-        throw new AccessDeniedException(
-                "Role " + callerRole + " is not permitted to perform this action.");
-    }
+    throw new AccessDeniedException(
+        "Role " + callerRole + " is not permitted to perform this action.");
+  }
 }

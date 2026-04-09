@@ -1,11 +1,10 @@
 package com.ipos.ipos_sa.entity;
 
 import jakarta.persistence.*;
-import lombok.*;
-import org.hibernate.annotations.CreationTimestamp;
-
 import java.time.LocalDateTime;
 import java.util.List;
+import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
 
 @Entity
 @Table(name = "users")
@@ -16,39 +15,42 @@ import java.util.List;
 @Builder
 public class User {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "user_id")
-    private Integer userId;
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  @Column(name = "user_id")
+  private Integer userId;
 
-    @Column(name = "username", nullable = false, unique = true, length = 50)
-    private String username;
+  @Column(name = "username", nullable = false, unique = true, length = 50)
+  private String username;
 
-    @Column(name = "password_hash", nullable = false, length = 255)
-    private String passwordHash;
+  @Column(name = "password_hash", nullable = false, length = 255)
+  private String passwordHash;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "role", nullable = false)
-    private Role role;
+  @Enumerated(EnumType.STRING)
+  @Column(name = "role", nullable = false)
+  private Role role;
 
-    @Column(name = "is_active", nullable = false)
-    private Boolean isActive;
+  @Column(name = "is_active", nullable = false)
+  private Boolean isActive;
 
-    @CreationTimestamp
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt;
+  @CreationTimestamp
+  @Column(name = "created_at", nullable = false, updatable = false)
+  private LocalDateTime createdAt;
 
+  @OneToOne(mappedBy = "user", fetch = FetchType.LAZY)
+  private Merchant merchant;
 
-    @OneToOne(mappedBy = "user", fetch = FetchType.LAZY)
-    private Merchant merchant;
+  @OneToMany(mappedBy = "authorizedBy", fetch = FetchType.LAZY)
+  private List<Merchant> authorizedMerchants;
 
-    @OneToMany(mappedBy = "authorizedBy", fetch = FetchType.LAZY)
-    private List<Merchant> authorizedMerchants;
+  @OneToMany(mappedBy = "dispatchedByUser", fetch = FetchType.LAZY)
+  private List<Order> dispatchedOrders;
 
-    @OneToMany(mappedBy = "dispatchedByUser", fetch = FetchType.LAZY)
-    private List<Order> dispatchedOrders;
-
-    public enum Role {
-        ADMIN, MANAGER, ACCOUNTANT, DIRECTOR, MERCHANT
-    }
+  public enum Role {
+    ADMIN,
+    MANAGER,
+    ACCOUNTANT,
+    DIRECTOR,
+    MERCHANT
+  }
 }

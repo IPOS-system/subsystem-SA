@@ -245,24 +245,26 @@ public class AccountService {
                 .build();
     }
 
-/**
-* Resets a user's password. ADMIN only — enforced in the controller.
- * Per the brief (UC-3), the old password is invalidated and replaced.
- */
- @Transactional
-public void resetPassword(Integer userId, String newPassword, User actingUser) {
-                User user = userRepository.findById(userId)
-                        .orElseThrow(() -> new ResourceNotFoundException("User", userId));
+        // ── Reset Password (UC-3) ──────────────────────────────────────────────────
 
-                user.setPasswordHash(passwordEncoder.encode(newPassword));
-                userRepository.save(user);
+    /**
+     * Resets a user's password. ADMIN only — enforced in the controller.
+     * Per the brief (UC-3), the old password is invalidated and replaced.
+     */
+    @Transactional
+    public void resetPassword(Integer userId, String newPassword, User actingUser) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User", userId));
 
-                audit(actingUser, "RESET_PASSWORD",
-                        "user", String.valueOf(userId),
-                        "Password reset for: " + user.getUsername());
+        user.setPasswordHash(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+
+        audit(actingUser, "RESET_PASSWORD",
+                "user", String.valueOf(userId),
+                "Password reset for: " + user.getUsername());
 
         log.info("Password reset: userId={} by adminId={}", userId, actingUser.getUserId());
-}
+    }
 
     // ── Restore from IN_DEFAULT ───────────────────────────────────────────────
 

@@ -6,18 +6,18 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
 /**
- * Request body for POST /api/accounts/staff.
- * Creates a non-merchant user (ADMIN, MANAGER, ACCOUNTANT, DIRECTOR).
+ * Request body for POST /api/accounts/staff. Creates a non-merchant user (ADMIN, MANAGER,
+ * ACCOUNTANT, DIRECTOR).
  */
 @Data
 public class CreateStaffRequest {
 
-    @NotBlank(message = "Username is required")
-    private String username;
+  @NotBlank(message = "Username is required")
+  private String username;
 
-    @NotBlank(message = "Password is required")
-    private String password;
+  @NotBlank(message = "Password is required")
+  private String password;
 
-    @NotNull(message = "Role is required")
-    private User.Role role;
+  @NotNull(message = "Role is required")
+  private User.Role role;
 }
