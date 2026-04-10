@@ -1,6 +1,6 @@
+--  Version: 3.0 (Added commercial_applications table)
 
---  Version: 2.0 (Updated based on Deliverable 1 feedback)
-
+DROP DATABASE IF EXISTS ipos_sa;
 CREATE DATABASE IF NOT EXISTS ipos_sa;
 USE ipos_sa;
 
@@ -115,7 +115,7 @@ CREATE TABLE IF NOT EXISTS payments (
     amount_paid     DECIMAL(10,2) NOT NULL,
     payment_method  ENUM('BANK_TRANSFER','CARD','CHEQUE') NOT NULL,
     payment_date    DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    recorded_by     INT           NOT NULL,   -- user_id of accountant
+    recorded_by     INT           NOT NULL,
     notes           TEXT,
     FOREIGN KEY (merchant_id) REFERENCES merchants(merchant_id),
     FOREIGN KEY (invoice_id)  REFERENCES invoices(invoice_id),
@@ -126,7 +126,7 @@ CREATE TABLE IF NOT EXISTS payments (
 CREATE TABLE IF NOT EXISTS monthly_discount_tracker (
     tracker_id      INT AUTO_INCREMENT PRIMARY KEY,
     merchant_id     INT           NOT NULL,
-    year_month      CHAR(7)       NOT NULL,   
+    `year_month`      VARCHAR(7)    NOT NULL,
     total_order_value DECIMAL(12,2) NOT NULL DEFAULT 0.00,
     discount_rate   DECIMAL(5,2)  DEFAULT NULL,  
     discount_amount DECIMAL(10,2) DEFAULT NULL,  
@@ -134,7 +134,7 @@ CREATE TABLE IF NOT EXISTS monthly_discount_tracker (
     settled_method  ENUM('CHEQUE','DEDUCTED_FROM_ORDER') DEFAULT NULL,
     created_at      DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (merchant_id) REFERENCES merchants(merchant_id),
-    UNIQUE KEY uq_merchant_month (merchant_id, year_month)
+    UNIQUE KEY uq_merchant_month (merchant_id, `year_month`)
 );
 
 
@@ -149,19 +149,22 @@ CREATE TABLE IF NOT EXISTS audit_log (
     FOREIGN KEY (user_id) REFERENCES users(user_id)
 );
 
-/*
-
-INSERT IGNORE INTO users (username, password_hash, role)
-VALUES ('admin',
-        SHA2('Admin1234!', 256),
-        'ADMIN');
-
-INSERT IGNORE INTO users (username, password_hash, role)
-VALUES ('director',
-        SHA2('Director1234!', 256),
-        'DIRECTOR');
-
-*/
+CREATE TABLE IF NOT EXISTS commercial_applications (
+    application_id   INT AUTO_INCREMENT PRIMARY KEY,
+    company_name     VARCHAR(100) NOT NULL,
+    company_reg_no   VARCHAR(50)  NOT NULL,
+    directors        VARCHAR(255) NOT NULL,
+    business_type    VARCHAR(50)  NOT NULL,
+    address          VARCHAR(255) NOT NULL,
+    email            VARCHAR(100) NOT NULL,
+    phone            VARCHAR(30),
+    status           ENUM('PENDING','APPROVED','REJECTED') NOT NULL DEFAULT 'PENDING',
+    submitted_at     DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    reviewed_by      INT DEFAULT NULL,
+    reviewed_at      DATETIME DEFAULT NULL,
+    notes            TEXT,
+    FOREIGN KEY (reviewed_by) REFERENCES users(user_id)
+);
 
 -- BCrypt hash of 'Admin1234!'
 INSERT IGNORE INTO users (username, password_hash, role)
