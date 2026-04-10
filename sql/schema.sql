@@ -148,6 +148,20 @@ CREATE TABLE IF NOT EXISTS audit_log (
     logged_at   DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(user_id)
 );
+CREATE TABLE IF NOT EXISTS commercial_applications (
+    application_id  INT AUTO_INCREMENT PRIMARY KEY,
+    email           VARCHAR(100) NOT NULL,
+    company_reg_no  VARCHAR(50)  NOT NULL,
+    company_name    VARCHAR(100) NOT NULL,
+    directors       VARCHAR(255) NOT NULL,
+    business_type   VARCHAR(100),
+    address         VARCHAR(255),
+    status          ENUM('PENDING','APPROVED','REJECTED') NOT NULL DEFAULT 'PENDING',
+    reviewed_by     INT DEFAULT NULL,
+    submitted_at    DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    reviewed_at     DATETIME DEFAULT NULL,
+    FOREIGN KEY (reviewed_by) REFERENCES users(user_id)
+);
 
 
 INSERT IGNORE INTO users (username, password_hash, role)
