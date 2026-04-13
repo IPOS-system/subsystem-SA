@@ -1,4 +1,5 @@
 ﻿using GOATflow.Utilities;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -37,7 +38,18 @@ namespace GOATflow
                     this.WindowState = WindowState.Minimized;
                     break;
                 case "LoginButton":
-                    string json = await Instance.HttpService.PostAuthLoginAsync(UserBox.Text, PasswordBox.Text);
+                    var (validated, errorMsg) = await Instance.HttpService.PostAuthLoginAsync(UserBox.Text, PasswordBox.Text);
+                    if (validated)
+                    {
+                        MessageBox.Show("Welcome back, " + Instance.Username, "GoatFlow", MessageBoxButton.OK, MessageBoxImage.Asterisk);
+                        MainWindow mainWindow = new MainWindow();
+                        mainWindow.Show();
+                        this.Close();
+                    }
+                    else
+                    {
+                        MessageBox.Show(errorMsg, "GoatFlow", MessageBoxButton.OK, MessageBoxImage.Error);
+                    }
                     break;
             }
         }

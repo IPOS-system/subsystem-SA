@@ -1,0 +1,740 @@
+﻿<Window
+    x:Class="GOATflow.Window1"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="clr-namespace:GOATflow"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    Title="Bootstrapper"
+    Width="900"
+    Height="550"
+    Background="#181926"
+    ResizeMode="NoResize"
+    Topmost="True"
+    WindowStartupLocation="CenterScreen"
+    WindowStyle="None"
+    mc:Ignorable="d">
+    <Window.Resources>
+        <Style x:Key="{ComponentResourceKey ResourceId=DataGridSelectAllButtonStyle, TypeInTargetAssembly={x:Type DataGrid}}" TargetType="{x:Type Button}">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type Button}">
+                        <Grid>
+                            <Rectangle
+                                x:Name="Border"
+                                Fill="{DynamicResource {x:Static SystemColors.ControlBrushKey}}"
+                                SnapsToDevicePixels="True" />
+                            <Polygon
+                                x:Name="Arrow"
+                                Margin="8,8,3,3"
+                                HorizontalAlignment="Right"
+                                VerticalAlignment="Bottom"
+                                Fill="Black"
+                                Opacity="0.15"
+                                Points="0,10 10,10 10,0"
+                                Stretch="Uniform" />
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Border" Property="Stroke" Value="{DynamicResource {x:Static SystemColors.ControlDarkBrushKey}}" />
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="Border" Property="Fill" Value="{DynamicResource {x:Static SystemColors.ControlDarkBrushKey}}" />
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="Arrow" Property="Visibility" Value="Collapsed" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="DataGridStyle1" TargetType="{x:Type DataGrid}">
+            <Setter Property="Background" Value="{DynamicResource {x:Static SystemColors.ControlBrushKey}}" />
+            <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}" />
+            <Setter Property="BorderBrush" Value="#FF688CAF" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="RowDetailsVisibilityMode" Value="VisibleWhenSelected" />
+            <Setter Property="ScrollViewer.CanContentScroll" Value="true" />
+            <Setter Property="ScrollViewer.PanningMode" Value="Both" />
+            <Setter Property="Stylus.IsFlicksEnabled" Value="False" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type DataGrid}">
+                        <Border
+                            Padding="{TemplateBinding Padding}"
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            SnapsToDevicePixels="True">
+                            <ScrollViewer x:Name="DG_ScrollViewer" Focusable="false">
+                                <ScrollViewer.Template>
+                                    <ControlTemplate TargetType="{x:Type ScrollViewer}">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto" />
+                                                <RowDefinition Height="*" />
+                                                <RowDefinition Height="Auto" />
+                                            </Grid.RowDefinitions>
+                                            <Button
+                                                Width="{Binding CellsPanelHorizontalOffset, RelativeSource={RelativeSource AncestorType={x:Type DataGrid}}}"
+                                                Command="{x:Static DataGrid.SelectAllCommand}"
+                                                Focusable="false"
+                                                Style="{DynamicResource {ComponentResourceKey ResourceId=DataGridSelectAllButtonStyle,
+                                                                                              TypeInTargetAssembly={x:Type DataGrid}}}"
+                                                Visibility="{Binding HeadersVisibility, ConverterParameter={x:Static DataGridHeadersVisibility.All}, Converter={x:Static DataGrid.HeadersVisibilityConverter}, RelativeSource={RelativeSource AncestorType={x:Type DataGrid}}}" />
+                                            <DataGridColumnHeadersPresenter
+                                                x:Name="PART_ColumnHeadersPresenter"
+                                                Grid.Column="1"
+                                                Visibility="{Binding HeadersVisibility, ConverterParameter={x:Static DataGridHeadersVisibility.Column}, Converter={x:Static DataGrid.HeadersVisibilityConverter}, RelativeSource={RelativeSource AncestorType={x:Type DataGrid}}}" />
+                                            <ScrollContentPresenter
+                                                x:Name="PART_ScrollContentPresenter"
+                                                Grid.Row="1"
+                                                Grid.ColumnSpan="2"
+                                                CanContentScroll="{TemplateBinding CanContentScroll}" />
+                                            <ScrollBar
+                                                x:Name="PART_VerticalScrollBar"
+                                                Grid.Row="1"
+                                                Grid.Column="2"
+                                                Maximum="{TemplateBinding ScrollableHeight}"
+                                                Orientation="Vertical"
+                                                ViewportSize="{TemplateBinding ViewportHeight}"
+                                                Visibility="{TemplateBinding ComputedVerticalScrollBarVisibility}"
+                                                Value="{Binding VerticalOffset, Mode=OneWay, RelativeSource={RelativeSource Mode=TemplatedParent}}" />
+                                            <Grid Grid.Row="2" Grid.Column="1">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="{Binding NonFrozenColumnsViewportHorizontalOffset, RelativeSource={RelativeSource AncestorType={x:Type DataGrid}}}" />
+                                                    <ColumnDefinition Width="*" />
+                                                </Grid.ColumnDefinitions>
+                                                <ScrollBar
+                                                    x:Name="PART_HorizontalScrollBar"
+                                                    Grid.Column="1"
+                                                    Maximum="{TemplateBinding ScrollableWidth}"
+                                                    Orientation="Horizontal"
+                                                    ViewportSize="{TemplateBinding ViewportWidth}"
+                                                    Visibility="{TemplateBinding ComputedHorizontalScrollBarVisibility}"
+                                                    Value="{Binding HorizontalOffset, Mode=OneWay, RelativeSource={RelativeSource Mode=TemplatedParent}}" />
+                                            </Grid>
+                                        </Grid>
+                                    </ControlTemplate>
+                                </ScrollViewer.Template>
+                                <ItemsPresenter SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" />
+                            </ScrollViewer>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <MultiTrigger>
+                    <MultiTrigger.Conditions>
+                        <Condition Property="IsGrouping" Value="true" />
+                        <Condition Property="VirtualizingPanel.IsVirtualizingWhenGrouping" Value="false" />
+                    </MultiTrigger.Conditions>
+                    <Setter Property="ScrollViewer.CanContentScroll" Value="false" />
+                </MultiTrigger>
+            </Style.Triggers>
+        </Style>
+    </Window.Resources>
+    <Window.Triggers />
+    <Grid>
+        <!-- ═══════════════════════════════════════════════════════════
+             TAB CONTROL — each TabItem is a "page" driven by nav buttons
+        ═══════════════════════════════════════════════════════════ -->
+        <TabControl x:Name="MainTabControl" Background="Transparent" BorderThickness="0">
+
+            <!-- ───────── TAB 0 : DASHBOARD ───────── -->
+            <TabItem Margin="-2,-2,14,6" Background="Transparent" BorderThickness="0">
+                <Grid Visibility="Visible">
+                    <!-- Catalogue preview table -->
+                    <Border
+                        Margin="222,248,10,10"
+                        BorderBrush="#24273a"
+                        BorderThickness="1"
+                        CornerRadius="5">
+                        <Border.Background>
+                            <LinearGradientBrush StartPoint="0,-2" EndPoint="1,1">
+                                <GradientStop Offset="0" Color="#1e2030" />
+                                <GradientStop Offset="1" Color="#1e2030" />
+                            </LinearGradientBrush>
+                        </Border.Background>
+                        <Grid>
+                            <Label Margin="9,7,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" Content="Product ID"
+                                   FontFamily="/Acrylix;component/Assets/Fonts/Poppins/#Poppins Medium" Foreground="#7c7c84" />
+                            <Grid Height="1" Margin="13,39,13,0" VerticalAlignment="Top" Background="White" Opacity="0.05" />
+                            <Label Margin="116,7,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" Content="Package Type"
+                                   FontFamily="/Acrylix;component/Assets/Fonts/Poppins/#Poppins Medium" Foreground="#7c7c84" />
+                            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                                <StackPanel Margin="0,40,0,0" Orientation="Vertical">
+                                    <Grid Height="50">
+                                        <Grid Height="1" Margin="13,0" VerticalAlignment="Bottom" Background="White" Opacity="0.05" />
+                                        <Label Margin="9,0" HorizontalAlignment="Left" VerticalAlignment="Center" Content="PlaceHolder1"
+                                               FontFamily="/Acrylix;component/Assets/Fonts/JetBrainsMono/#JetBrains Mono" Foreground="White" />
+                                        <Label Margin="117,0,0,0" HorizontalAlignment="Left" VerticalAlignment="Center" Content="Box"
+                                               FontFamily="/Acrylix;component/Assets/Fonts/JetBrainsMono/#JetBrains Mono" Foreground="White" />
+                                        <Button Width="42" Height="26" Margin="609,0,0,0" HorizontalAlignment="Left" VerticalAlignment="Center"
+                                                Background="White" BorderBrush="{x:Null}" Style="{DynamicResource WhiteButtonStyle}">
+                                            <TextBlock Margin="3" FontSize="11" Foreground="#181926" Text="Add" />
+                                        </Button>
+                                        <Label Margin="231,0,0,0" HorizontalAlignment="Left" VerticalAlignment="Center" Content="Pieces"
+                                               FontFamily="/Acrylix;component/Assets/Fonts/JetBrainsMono/#JetBrains Mono" Foreground="White" />
+                                        <Label Margin="307,0,0,0" HorizontalAlignment="Left" VerticalAlignment="Center" Content="10"
+                                               FontFamily="/Acrylix;component/Assets/Fonts/JetBrainsMono/#JetBrains Mono" Foreground="White" />
+                                        <Label Margin="404,0,0,0" HorizontalAlignment="Left" VerticalAlignment="Center" Content="100"
+                                               FontFamily="/Acrylix;component/Assets/Fonts/JetBrainsMono/#JetBrains Mono" Foreground="White" />
+                                        <Label Margin="509,0,0,0" HorizontalAlignment="Left" VerticalAlignment="Center" Content="20.99"
+                                               FontFamily="/Acrylix;component/Assets/Fonts/JetBrainsMono/#JetBrains Mono" Foreground="White" />
+                                    </Grid>
+                                </StackPanel>
+                            </ScrollViewer>
+                            <Label Margin="604,7,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" Content="Actions"
+                                   FontFamily="/Acrylix;component/Assets/Fonts/Poppins/#Poppins Medium" Foreground="#7c7c84" />
+                            <Label Margin="232,7,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" Content="Unit"
+                                   FontFamily="/Acrylix;component/Assets/Fonts/Poppins/#Poppins Medium" Foreground="#7c7c84" />
+                            <Label Margin="306,7,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" Content="Units / Pack"
+                                   FontFamily="/Acrylix;component/Assets/Fonts/Poppins/#Poppins Medium" Foreground="#7c7c84" />
+                            <Label Margin="405,7,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" Content="Availability"
+                                   FontFamily="/Acrylix;component/Assets/Fonts/Poppins/#Poppins Medium" Foreground="#7c7c84" />
+                            <Label Margin="511,7,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" Content="Price"
+                                   FontFamily="/Acrylix;component/Assets/Fonts/Poppins/#Poppins Medium" Foreground="#7c7c84" />
+                        </Grid>
+                    </Border>
+                    <Label Margin="221,220,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" Content="Catalogue"
+                           FontFamily="/GOATflow;component/Assets/Fonts/Poppins/#Poppins" FontSize="12" Foreground="White" Opacity=".9" />
+
+                    <!-- Welcome card -->
+                    <Border Margin="223,70,284,340" BorderBrush="#24273a" BorderThickness="1" CornerRadius="5">
+                        <Border.Background>
+                            <LinearGradientBrush StartPoint="0,-2" EndPoint="1,1">
+                                <GradientStop Offset="0" Color="#24273a" />
+                                <GradientStop Offset="1" Color="#1e2030" />
+                            </LinearGradientBrush>
+                        </Border.Background>
+                        <Grid>
+                            <Label Margin="9,7,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" Content="Welcome back to GoatFlow"
+                                   FontFamily="/GOATflow;component/Assets/Fonts/Poppins/#Poppins Medium" Foreground="White" />
+                            <Label x:Name="UsernameLabel1" Margin="9,32,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" Content="Username"
+                                   FontFamily="/GOATflow;component/Assets/Fonts/Poppins/#Poppins Semibold" FontSize="15" Foreground="White" />
+                            <Button x:Name="ViewAccountButton" Width="99" Height="26" Margin="12,0,0,13"
+                                    HorizontalAlignment="Left" VerticalAlignment="Bottom" Background="White" BorderBrush="{x:Null}"
+                                    Style="{DynamicResource WhiteButtonStyle}">
+                                <TextBlock Margin="3" FontSize="11" Foreground="#1e2030" Text="View Account" />
+                            </Button>
+                        </Grid>
+                    </Border>
+
+                    <!-- Overview card -->
+                    <Border Margin="635,70,10,340" BorderBrush="#24273a" BorderThickness="1" CornerRadius="5">
+                        <Border.Background>
+                            <LinearGradientBrush StartPoint="0,-2" EndPoint="1,1">
+                                <GradientStop Offset="0" Color="#24273a" />
+                                <GradientStop Offset="1" Color="#1e2030" />
+                            </LinearGradientBrush>
+                        </Border.Background>
+                        <Grid>
+                            <Label Margin="9,7,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" Content="Overview"
+                                   FontFamily="/GOATflow;component/Assets/Fonts/Poppins/#Poppins Medium" Foreground="White" />
+                            <Grid Height="1" Margin="13,39,13,0" VerticalAlignment="Top" Background="White" Opacity="0.05" />
+                            <Label Margin="9,44,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" Content="Balance:"
+                                   FontFamily="/GOATflow;component/Assets/Fonts/Poppins/#Poppins Medium" Foreground="#7c7c84" />
+                            <Label Margin="9,70,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" Content="Credit limit:"
+                                   FontFamily="/GOATflow;component/Assets/Fonts/Poppins/#Poppins Medium" Foreground="#7c7c84" />
+                            <Label x:Name="BalanceLabel1" Margin="69,45,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" Content="69.99"
+                                   FontFamily="/GOATflow;component/Assets/Fonts/JetBrainsMono/#JetBrains Mono" Foreground="#575a6d" />
+                            <Label x:Name="CreditLimitLabel1" Margin="86,71,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" Content="1234.12"
+                                   FontFamily="/GOATflow;component/Assets/Fonts/JetBrainsMono/#JetBrains Mono" Foreground="#575a6d" />
+                            <Label Margin="9,96,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" Content="Status:"
+                                   FontFamily="/GOATflow;component/Assets/Fonts/Poppins/#Poppins Medium" Foreground="#7c7c84" />
+                            <Label x:Name="StatusLabel1" Width="125" Margin="60,97,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" Content="NORMAL"
+                                   FontFamily="/GOATflow;component/Assets/Fonts/JetBrainsMono/#JetBrains Mono" Foreground="#575a6d" />
+                        </Grid>
+                    </Border>
+                </Grid>
+            </TabItem>
+
+            <!-- ───────── TAB 1 : BROWSE CATALOGUE ───────── -->
+            <TabItem Background="Transparent" BorderThickness="0">
+                <Grid Margin="225,75,10,10">
+
+                    <!-- Search bar row -->
+                    <Grid Height="32" VerticalAlignment="Top">
+                        <TextBox x:Name="CatalogueSearchBox"
+                                 Height="32"
+                                 Margin="0,0,110,0"
+                                 Padding="8,0"
+                                 VerticalContentAlignment="Center"
+                                 Background="White"
+                                 BorderBrush="#cccccc"
+                                 BorderThickness="1"
+                                 Foreground="Black"
+                                 Text=""
+                                 Tag="Search by product code or keyword..." />
+                        <Button x:Name="CatalogueSearchButton"
+                                Width="100"
+                                Height="32"
+                                HorizontalAlignment="Right"
+                                Background="White"
+                                BorderBrush="#cccccc"
+                                BorderThickness="1"
+                                Click="ButtonHandler"
+                                Foreground="Black">
+                            Search
+                        </Button>
+                    </Grid>
+
+                    <!-- Column headers -->
+                    <Grid Height="30" Margin="0,40,0,0" VerticalAlignment="Top" Background="#eeeeee">
+                        <Label Width="100" HorizontalAlignment="Left" VerticalAlignment="Center" Content="Product Code" FontSize="11" Foreground="Black" Margin="4,0,0,0"/>
+                        <Label Width="180" HorizontalAlignment="Left" VerticalAlignment="Center" Content="Description"  FontSize="11" Foreground="Black" Margin="104,0,0,0"/>
+                        <Label Width="70"  HorizontalAlignment="Left" VerticalAlignment="Center" Content="Unit"         FontSize="11" Foreground="Black" Margin="284,0,0,0"/>
+                        <Label Width="80"  HorizontalAlignment="Left" VerticalAlignment="Center" Content="Units/Pack"   FontSize="11" Foreground="Black" Margin="354,0,0,0"/>
+                        <Label Width="80"  HorizontalAlignment="Left" VerticalAlignment="Center" Content="Stock"        FontSize="11" Foreground="Black" Margin="434,0,0,0"/>
+                        <Label Width="80"  HorizontalAlignment="Left" VerticalAlignment="Center" Content="Price"        FontSize="11" Foreground="Black" Margin="514,0,0,0"/>
+                        <Label Width="60"  HorizontalAlignment="Left" VerticalAlignment="Center" Content="Action"       FontSize="11" Foreground="Black" Margin="594,0,0,0"/>
+                    </Grid>
+
+                    <!-- Product list -->
+                    <ListBox x:Name="CatalogueListBox"
+                             Margin="0,70,0,45"
+                             Background="White"
+                             BorderBrush="#cccccc"
+                             BorderThickness="1">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <Grid Height="36">
+                                    <Label Width="100" HorizontalAlignment="Left" VerticalAlignment="Center" Content="{Binding ProductCode}" FontSize="12" Foreground="Black" Margin="4,0,0,0"/>
+                                    <Label Width="180" HorizontalAlignment="Left" VerticalAlignment="Center" Content="{Binding Description}"  FontSize="12" Foreground="Black" Margin="104,0,0,0"/>
+                                    <Label Width="70"  HorizontalAlignment="Left" VerticalAlignment="Center" Content="{Binding Unit}"         FontSize="12" Foreground="Black" Margin="284,0,0,0"/>
+                                    <Label Width="80"  HorizontalAlignment="Left" VerticalAlignment="Center" Content="{Binding UnitsPerPack}" FontSize="12" Foreground="Black" Margin="354,0,0,0"/>
+                                    <Label Width="80"  HorizontalAlignment="Left" VerticalAlignment="Center" Content="{Binding StockQty}"     FontSize="12" Foreground="Black" Margin="434,0,0,0"/>
+                                    <Label Width="80"  HorizontalAlignment="Left" VerticalAlignment="Center" Content="{Binding Price}"        FontSize="12" Foreground="Black" Margin="514,0,0,0"/>
+                                    <Button Width="50" Height="24" HorizontalAlignment="Left" VerticalAlignment="Center"
+                                            Background="White" BorderBrush="#cccccc" BorderThickness="1"
+                                            Click="ButtonHandler" Foreground="Black" Margin="594,0,0,0"
+                                            Tag="{Binding ProductCode}">
+                                        Add
+                                    </Button>
+                                </Grid>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+
+                    <!-- View basket button -->
+                    <Button x:Name="ViewBasketFromCatalogueButton"
+                            Width="120" Height="30"
+                            HorizontalAlignment="Right" VerticalAlignment="Bottom"
+                            Background="White" BorderBrush="#cccccc" BorderThickness="1"
+                            Click="ButtonHandler" Foreground="Black">
+                        View Basket →
+                    </Button>
+                </Grid>
+            </TabItem>
+
+            <!-- ───────── TAB 2 : BASKET / PLACE ORDER ───────── -->
+            <TabItem Background="Transparent" BorderThickness="0">
+                <Grid Margin="225,75,10,10">
+
+                    <!-- Discount notice banner (shown/hidden from code-behind) -->
+                    <Border x:Name="DiscountNoticeBanner"
+                            Height="36" VerticalAlignment="Top"
+                            Background="#fffbe6" BorderBrush="#f0d060" BorderThickness="1" CornerRadius="4"
+                            Visibility="Collapsed">
+                        <Label x:Name="DiscountNoticeLabel"
+                               HorizontalAlignment="Center" VerticalAlignment="Center"
+                               Content="You are on a FLEXIBLE plan — discount settled at end of month."
+                               FontSize="12" Foreground="#7a6000" />
+                    </Border>
+
+                    <!-- Blocked banner (shown when SUSPENDED / IN_DEFAULT) -->
+                    <Border x:Name="OrderBlockedBanner"
+                            Height="60" Margin="0,0,0,0" VerticalAlignment="Top"
+                            Background="#fdecea" BorderBrush="#e57373" BorderThickness="1" CornerRadius="4"
+                            Visibility="Collapsed">
+                        <Label HorizontalAlignment="Center" VerticalAlignment="Center"
+                               Content="Your account is suspended or in default. Orders cannot be placed."
+                               FontSize="13" Foreground="#b71c1c" />
+                    </Border>
+
+                    <!-- Column headers -->
+                    <Grid x:Name="BasketHeaderGrid" Height="30" Margin="0,40,0,0" VerticalAlignment="Top" Background="#eeeeee">
+                        <Label Width="120" HorizontalAlignment="Left" VerticalAlignment="Center" Content="Product Code" FontSize="11" Foreground="Black" Margin="4,0,0,0"/>
+                        <Label Width="180" HorizontalAlignment="Left" VerticalAlignment="Center" Content="Description"  FontSize="11" Foreground="Black" Margin="124,0,0,0"/>
+                        <Label Width="70"  HorizontalAlignment="Left" VerticalAlignment="Center" Content="Qty"          FontSize="11" Foreground="Black" Margin="304,0,0,0"/>
+                        <Label Width="90"  HorizontalAlignment="Left" VerticalAlignment="Center" Content="Unit Price"   FontSize="11" Foreground="Black" Margin="374,0,0,0"/>
+                        <Label Width="90"  HorizontalAlignment="Left" VerticalAlignment="Center" Content="Line Total"   FontSize="11" Foreground="Black" Margin="464,0,0,0"/>
+                        <Label Width="60"  HorizontalAlignment="Left" VerticalAlignment="Center" Content="Remove"       FontSize="11" Foreground="Black" Margin="554,0,0,0"/>
+                    </Grid>
+
+                    <!-- Basket items -->
+                    <ListBox x:Name="BasketListBox"
+                             Margin="0,70,0,110"
+                             Background="White" BorderBrush="#cccccc" BorderThickness="1">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <Grid Height="36">
+                                    <Label Width="120" HorizontalAlignment="Left" VerticalAlignment="Center" Content="{Binding ProductCode}"  FontSize="12" Foreground="Black" Margin="4,0,0,0"/>
+                                    <Label Width="180" HorizontalAlignment="Left" VerticalAlignment="Center" Content="{Binding Description}"   FontSize="12" Foreground="Black" Margin="124,0,0,0"/>
+                                    <!-- Qty with +/- -->
+                                    <Button Width="20" Height="20" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="304,0,0,0"
+                                            Background="White" BorderBrush="#cccccc" BorderThickness="1" Click="ButtonHandler" Foreground="Black"
+                                            Tag="{Binding ProductCode}" Name="DecrQtyButton">-</Button>
+                                    <Label Width="30" HorizontalAlignment="Left" VerticalAlignment="Center" Content="{Binding Qty}" FontSize="12" Foreground="Black" Margin="326,0,0,0"/>
+                                    <Button Width="20" Height="20" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="358,0,0,0"
+                                            Background="White" BorderBrush="#cccccc" BorderThickness="1" Click="ButtonHandler" Foreground="Black"
+                                            Tag="{Binding ProductCode}" Name="IncrQtyButton">+</Button>
+                                    <Label Width="90"  HorizontalAlignment="Left" VerticalAlignment="Center" Content="{Binding UnitPrice}"  FontSize="12" Foreground="Black" Margin="374,0,0,0"/>
+                                    <Label Width="90"  HorizontalAlignment="Left" VerticalAlignment="Center" Content="{Binding LineTotal}"  FontSize="12" Foreground="Black" Margin="464,0,0,0"/>
+                                    <Button Width="55" Height="24" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="554,0,0,0"
+                                            Background="White" BorderBrush="#cccccc" BorderThickness="1" Click="ButtonHandler" Foreground="Black"
+                                            Tag="{Binding ProductCode}" Name="RemoveBasketItemButton">
+                                        Remove
+                                    </Button>
+                                </Grid>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+
+                    <!-- Totals / discount section -->
+                    <Border Margin="0,0,0,40" Height="66" VerticalAlignment="Bottom"
+                            Background="#f8f8f8" BorderBrush="#cccccc" BorderThickness="1" CornerRadius="4">
+                        <Grid Margin="10,5">
+                            <Label HorizontalAlignment="Left" VerticalAlignment="Top" Content="Subtotal:" FontSize="12" Foreground="Black"/>
+                            <Label x:Name="BasketSubtotalLabel" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="70,0,0,0" Content="£0.00" FontSize="12" Foreground="Black"/>
+                            <!-- Shown only when FIXED discount plan -->
+                            <Label x:Name="DiscountRateLabel" HorizontalAlignment="Left" VerticalAlignment="Bottom" Content="Discount (0%):" FontSize="12" Foreground="Black" Visibility="Collapsed"/>
+                            <Label x:Name="DiscountAmountLabel" HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="110,0,0,0" Content="-£0.00" FontSize="12" Foreground="Black" Visibility="Collapsed"/>
+                            <Label HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,120,0" Content="Total:" FontSize="13" Foreground="Black" FontWeight="Bold"/>
+                            <Label x:Name="BasketTotalLabel" HorizontalAlignment="Right" VerticalAlignment="Bottom" Content="£0.00" FontSize="13" Foreground="Black" FontWeight="Bold" Margin="0,0,10,0"/>
+                        </Grid>
+                    </Border>
+
+                    <!-- Submit order button -->
+                    <Button x:Name="SubmitOrderButton"
+                            Width="140" Height="32"
+                            HorizontalAlignment="Right" VerticalAlignment="Bottom"
+                            Background="White" BorderBrush="#cccccc" BorderThickness="1"
+                            Click="ButtonHandler" Foreground="Black">
+                        Place Order
+                    </Button>
+
+                    <!-- Order confirmation (hidden until 201 received) -->
+                    <Border x:Name="OrderConfirmationBanner"
+                            Height="40" VerticalAlignment="Bottom" Margin="0,0,155,0"
+                            Background="#e8f5e9" BorderBrush="#81c784" BorderThickness="1" CornerRadius="4"
+                            Visibility="Collapsed">
+                        <Label HorizontalAlignment="Center" VerticalAlignment="Center"
+                               Content="Order placed successfully!" FontSize="13" Foreground="#1b5e20"/>
+                    </Border>
+                </Grid>
+            </TabItem>
+
+            <!-- ───────── TAB 3 : MY ORDERS ───────── -->
+            <TabItem Background="Transparent" BorderThickness="0">
+                <Grid Margin="225,75,10,10">
+
+                    <!-- Orders list -->
+                    <Label Content="My Orders" FontSize="14" Foreground="White" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="0,0,0,0"/>
+
+                    <!-- Column headers -->
+                    <Grid Height="30" Margin="0,28,0,0" VerticalAlignment="Top" Background="#eeeeee">
+                        <Label Width="100" HorizontalAlignment="Left" VerticalAlignment="Center" Content="Order ID"    FontSize="11" Foreground="Black" Margin="4,0,0,0"/>
+                        <Label Width="100" HorizontalAlignment="Left" VerticalAlignment="Center" Content="Date"        FontSize="11" Foreground="Black" Margin="104,0,0,0"/>
+                        <Label Width="80"  HorizontalAlignment="Left" VerticalAlignment="Center" Content="Status"      FontSize="11" Foreground="Black" Margin="204,0,0,0"/>
+                        <Label Width="90"  HorizontalAlignment="Left" VerticalAlignment="Center" Content="Total"       FontSize="11" Foreground="Black" Margin="284,0,0,0"/>
+                        <Label Width="60"  HorizontalAlignment="Left" VerticalAlignment="Center" Content="Action"      FontSize="11" Foreground="Black" Margin="374,0,0,0"/>
+                    </Grid>
+
+                    <ListBox x:Name="OrdersListBox"
+                             Margin="0,58,0,10"
+                             Background="White" BorderBrush="#cccccc" BorderThickness="1">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <Grid Height="36">
+                                    <Label Width="100" HorizontalAlignment="Left" VerticalAlignment="Center" Content="{Binding OrderId}"   FontSize="12" Foreground="Black" Margin="4,0,0,0"/>
+                                    <Label Width="100" HorizontalAlignment="Left" VerticalAlignment="Center" Content="{Binding OrderDate}" FontSize="12" Foreground="Black" Margin="104,0,0,0"/>
+                                    <Label Width="80"  HorizontalAlignment="Left" VerticalAlignment="Center" Content="{Binding Status}"    FontSize="12" Foreground="Black" Margin="204,0,0,0"/>
+                                    <Label Width="90"  HorizontalAlignment="Left" VerticalAlignment="Center" Content="{Binding Total}"     FontSize="12" Foreground="Black" Margin="284,0,0,0"/>
+                                    <Button Width="55" Height="24" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="374,0,0,0"
+                                            Background="White" BorderBrush="#cccccc" BorderThickness="1"
+                                            Click="ButtonHandler" Foreground="Black" Tag="{Binding OrderId}">
+                                        Details
+                                    </Button>
+                                </Grid>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+
+                    <!-- Order detail panel (shown when user clicks Details) -->
+                    <Border x:Name="OrderDetailPanel"
+                            Margin="450,0,0,0"
+                            Background="White" BorderBrush="#cccccc" BorderThickness="1" CornerRadius="4"
+                            Visibility="Collapsed">
+                        <Grid Margin="10">
+                            <Label Content="Order Detail" FontSize="14" Foreground="Black" VerticalAlignment="Top" HorizontalAlignment="Left"/>
+                            <Grid Height="1" Margin="0,28,0,0" VerticalAlignment="Top" Background="#cccccc"/>
+                            <StackPanel Margin="0,36,0,0" Orientation="Vertical">
+                                <StackPanel Orientation="Horizontal" Margin="0,4">
+                                    <Label Width="90" Content="Order ID:"      FontSize="12" Foreground="#555"/>
+                                    <Label x:Name="DetailOrderId"      Width="160" Content="" FontSize="12" Foreground="Black"/>
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal" Margin="0,4">
+                                    <Label Width="90" Content="Date:"          FontSize="12" Foreground="#555"/>
+                                    <Label x:Name="DetailOrderDate"    Width="160" Content="" FontSize="12" Foreground="Black"/>
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal" Margin="0,4">
+                                    <Label Width="90" Content="Status:"        FontSize="12" Foreground="#555"/>
+                                    <Label x:Name="DetailOrderStatus"  Width="160" Content="" FontSize="12" Foreground="Black"/>
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal" Margin="0,4">
+                                    <Label Width="90" Content="Dispatch via:"  FontSize="12" Foreground="#555"/>
+                                    <Label x:Name="DetailDispatchInfo" Width="160" Content="" FontSize="12" Foreground="Black"/>
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal" Margin="0,4">
+                                    <Label Width="90" Content="Tracking ref:"  FontSize="12" Foreground="#555"/>
+                                    <Label x:Name="DetailTrackingRef"  Width="160" Content="" FontSize="12" Foreground="Black"/>
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal" Margin="0,4">
+                                    <Label Width="90" Content="Total:"         FontSize="12" Foreground="#555"/>
+                                    <Label x:Name="DetailOrderTotal"   Width="160" Content="" FontSize="12" Foreground="Black" FontWeight="Bold"/>
+                                </StackPanel>
+                            </StackPanel>
+                            <Button x:Name="CloseOrderDetailButton"
+                                    Width="70" Height="26" VerticalAlignment="Bottom" HorizontalAlignment="Right"
+                                    Background="White" BorderBrush="#cccccc" BorderThickness="1"
+                                    Click="ButtonHandler" Foreground="Black">
+                                Close
+                            </Button>
+                        </Grid>
+                    </Border>
+                </Grid>
+            </TabItem>
+
+            <!-- ───────── TAB 4 : MY BALANCE ───────── -->
+            <TabItem Background="Transparent" BorderThickness="0">
+                <Grid Margin="225,75,10,10">
+
+                    <Label Content="My Balance" FontSize="14" Foreground="White" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="0,0,0,0"/>
+
+                    <!-- Column headers -->
+                    <Grid Height="30" Margin="0,28,0,0" VerticalAlignment="Top" Background="#eeeeee">
+                        <Label Width="100" HorizontalAlignment="Left" VerticalAlignment="Center" Content="Invoice ID"  FontSize="11" Foreground="Black" Margin="4,0,0,0"/>
+                        <Label Width="110" HorizontalAlignment="Left" VerticalAlignment="Center" Content="Date"        FontSize="11" Foreground="Black" Margin="104,0,0,0"/>
+                        <Label Width="80"  HorizontalAlignment="Left" VerticalAlignment="Center" Content="Status"      FontSize="11" Foreground="Black" Margin="214,0,0,0"/>
+                        <Label Width="90"  HorizontalAlignment="Left" VerticalAlignment="Center" Content="Amount"      FontSize="11" Foreground="Black" Margin="294,0,0,0"/>
+                        <Label Width="100" HorizontalAlignment="Left" VerticalAlignment="Center" Content="Outstanding" FontSize="11" Foreground="Black" Margin="384,0,0,0"/>
+                        <Label Width="60"  HorizontalAlignment="Left" VerticalAlignment="Center" Content="Action"      FontSize="11" Foreground="Black" Margin="484,0,0,0"/>
+                    </Grid>
+
+                    <ListBox x:Name="InvoicesListBox"
+                             Margin="0,58,0,10"
+                             Background="White" BorderBrush="#cccccc" BorderThickness="1">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <Grid Height="36">
+                                    <Label Width="100" HorizontalAlignment="Left" VerticalAlignment="Center" Content="{Binding InvoiceId}"    FontSize="12" Foreground="Black" Margin="4,0,0,0"/>
+                                    <Label Width="110" HorizontalAlignment="Left" VerticalAlignment="Center" Content="{Binding InvoiceDate}"  FontSize="12" Foreground="Black" Margin="104,0,0,0"/>
+                                    <!-- Status badge — colour set from code-behind -->
+                                    <Label Width="80"  HorizontalAlignment="Left" VerticalAlignment="Center" Content="{Binding Status}"       FontSize="12" Foreground="Black" Margin="214,0,0,0"/>
+                                    <Label Width="90"  HorizontalAlignment="Left" VerticalAlignment="Center" Content="{Binding Amount}"       FontSize="12" Foreground="Black" Margin="294,0,0,0"/>
+                                    <Label Width="100" HorizontalAlignment="Left" VerticalAlignment="Center" Content="{Binding Outstanding}"  FontSize="12" Foreground="Black" Margin="384,0,0,0"/>
+                                    <Button Width="55" Height="24" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="484,0,0,0"
+                                            Background="White" BorderBrush="#cccccc" BorderThickness="1"
+                                            Click="ButtonHandler" Foreground="Black" Tag="{Binding InvoiceId}">
+                                        Details
+                                    </Button>
+                                </Grid>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+
+                    <!-- Invoice detail panel -->
+                    <Border x:Name="InvoiceDetailPanel"
+                            Margin="550,0,0,0"
+                            Background="White" BorderBrush="#cccccc" BorderThickness="1" CornerRadius="4"
+                            Visibility="Collapsed">
+                        <Grid Margin="10">
+                            <Label Content="Invoice Detail" FontSize="14" Foreground="Black" VerticalAlignment="Top" HorizontalAlignment="Left"/>
+                            <Grid Height="1" Margin="0,28,0,0" VerticalAlignment="Top" Background="#cccccc"/>
+                            <StackPanel Margin="0,36,0,0" Orientation="Vertical">
+                                <StackPanel Orientation="Horizontal" Margin="0,4">
+                                    <Label Width="90" Content="Invoice ID:"   FontSize="12" Foreground="#555"/>
+                                    <Label x:Name="DetailInvoiceId"      Width="150" Content="" FontSize="12" Foreground="Black"/>
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal" Margin="0,4">
+                                    <Label Width="90" Content="Date:"         FontSize="12" Foreground="#555"/>
+                                    <Label x:Name="DetailInvoiceDate"    Width="150" Content="" FontSize="12" Foreground="Black"/>
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal" Margin="0,4">
+                                    <Label Width="90" Content="Status:"       FontSize="12" Foreground="#555"/>
+                                    <Label x:Name="DetailInvoiceStatus"  Width="150" Content="" FontSize="12" Foreground="Black"/>
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal" Margin="0,4">
+                                    <Label Width="90" Content="Amount:"       FontSize="12" Foreground="#555"/>
+                                    <Label x:Name="DetailInvoiceAmount"  Width="150" Content="" FontSize="12" Foreground="Black"/>
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal" Margin="0,4">
+                                    <Label Width="90" Content="Outstanding:"  FontSize="12" Foreground="#555"/>
+                                    <Label x:Name="DetailInvoiceOutstanding" Width="150" Content="" FontSize="12" Foreground="Black" FontWeight="Bold"/>
+                                </StackPanel>
+                                <!-- Payment history sub-list -->
+                                <Label Content="Payment history" FontSize="12" Foreground="#555" Margin="0,8,0,2"/>
+                                <ListBox x:Name="PaymentHistoryListBox"
+                                         Height="100" Background="White" BorderBrush="#dddddd" BorderThickness="1">
+                                    <ListBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <StackPanel Orientation="Horizontal">
+                                                <Label Width="90" Content="{Binding PaymentDate}" FontSize="11" Foreground="Black"/>
+                                                <Label Width="70" Content="{Binding Amount}"      FontSize="11" Foreground="Black"/>
+                                                <Label Width="80" Content="{Binding Method}"      FontSize="11" Foreground="Black"/>
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </ListBox.ItemTemplate>
+                                </ListBox>
+                            </StackPanel>
+                            <Button x:Name="CloseInvoiceDetailButton"
+                                    Width="70" Height="26" VerticalAlignment="Bottom" HorizontalAlignment="Right"
+                                    Background="White" BorderBrush="#cccccc" BorderThickness="1"
+                                    Click="ButtonHandler" Foreground="Black">
+                                Close
+                            </Button>
+                        </Grid>
+                    </Border>
+                </Grid>
+            </TabItem>
+
+        </TabControl>
+
+        <!-- ═══════════════════════════════════════════════════════════
+             CHROME: sidebar divider, logo, top bar, nav buttons
+        ═══════════════════════════════════════════════════════════ -->
+        <Border Width="1" Margin="212,0,687,0" Background="#292A37" />
+        <Image Margin="-3,4,815,489" RenderOptions.BitmapScalingMode="HighQuality" Source="/logo.png" Stretch="Fill" />
+
+        <!-- NAV BUTTONS — Tag drives tab index switching in ButtonHandler -->
+        <Button Height="32" Margin="25,99,715,0" VerticalAlignment="Top" HorizontalContentAlignment="Left"
+                Background="White" BorderBrush="{x:Null}" Click="ButtonHandler"
+                Style="{DynamicResource WhiteButtonStyle}" Tag="0">
+            <Grid>
+                <Path Width="14" Height="13" Margin="10,0,0,0" HorizontalAlignment="Left" VerticalAlignment="Center"
+                      Data="m2.25 12 8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25"
+                      Stretch="Fill" Stroke="#24273a" StrokeThickness="1.5" />
+                <TextBlock Margin="35,0,0,0" VerticalAlignment="Center" Foreground="#24273a" Text="Dashboard" />
+            </Grid>
+        </Button>
+
+        <Button Height="32" Margin="25,147,715,0" VerticalAlignment="Top" HorizontalContentAlignment="Left"
+                Background="#348688" BorderBrush="{x:Null}" Click="ButtonHandler"
+                Style="{DynamicResource TransparentButtonStyle}" Tag="1">
+            <Grid>
+                <Path Width="14" Height="13" Margin="10,0,0,0" HorizontalAlignment="Left" VerticalAlignment="Center"
+                      Data="M3.75 3v11.25A2.25 2.25 0 0 0 6 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0 1 18 16.5h-2.25m-7.5 0h7.5m-7.5 0-1 3m8.5-3 1 3m0 0 .5 1.5m-.5-1.5h-9.5m0 0-.5 1.5m.75-9 3-3 2.148 2.148A12.061 12.061 0 0 1 16.5 7.605"
+                      Stretch="Fill" Stroke="White" StrokeThickness="1.5" />
+                <TextBlock Margin="35,0,0,0" VerticalAlignment="Center" Foreground="White" Text="Catalogue" />
+            </Grid>
+        </Button>
+
+        <Button Height="32" Margin="25,194,715,0" VerticalAlignment="Top" HorizontalContentAlignment="Left"
+                Background="#348688" BorderBrush="{x:Null}" Click="ButtonHandler"
+                Style="{DynamicResource TransparentButtonStyle}" Tag="2">
+            <Grid>
+                <Path Width="14" Height="13" Margin="10,0,0,0" HorizontalAlignment="Left" VerticalAlignment="Center"
+                      Data="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 0 0-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 0 0-16.536-1.84M7.5 14.25 5.106 5.272M6 20.25a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Zm12.75 0a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Z"
+                      Stretch="Fill" Stroke="White" StrokeThickness="1.5" />
+                <TextBlock Margin="35,0,0,0" VerticalAlignment="Center" Foreground="White" Text="Basket" />
+            </Grid>
+        </Button>
+
+        <Button Height="32" Margin="25,240,715,0" VerticalAlignment="Top" HorizontalContentAlignment="Left"
+                Background="#348688" BorderBrush="{x:Null}" Click="ButtonHandler"
+                Style="{DynamicResource TransparentButtonStyle}" Tag="3">
+            <Grid>
+                <Path Width="12" Height="13" Margin="12,0,0,0" HorizontalAlignment="Left" VerticalAlignment="Center"
+                      Data="M3.75 12h16.5m-16.5 3.75h16.5M3.75 19.5h16.5M5.625 4.5h12.75a1.875 1.875 0 0 1 0 3.75H5.625a1.875 1.875 0 0 1 0-3.75Z"
+                      Stretch="Fill" Stroke="White" StrokeThickness="1.5" />
+                <TextBlock Margin="36,0,0,0" VerticalAlignment="Center" Foreground="White" Text="My Orders" />
+            </Grid>
+        </Button>
+
+        <Button Height="32" Margin="25,287,715,0" VerticalAlignment="Top" HorizontalContentAlignment="Left"
+                Background="#348688" BorderBrush="{x:Null}" Click="ButtonHandler"
+                Style="{DynamicResource TransparentButtonStyle}" Tag="4">
+            <Grid>
+                <Path Width="12" Height="13" Margin="12,0,0,0" HorizontalAlignment="Left" VerticalAlignment="Center"
+                      Data="M2.25 18.75a60.07 60.07 0 0 1 15.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 0 1 3 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 0 0-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 0 1-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 0 0 3 15h-.75M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm3 0h.008v.008H18V10.5Zm-12 0h.008v.008H6V10.5Z"
+                      Stretch="Fill" Stroke="White" StrokeThickness="1.5" />
+                <TextBlock Margin="36,0,0,0" VerticalAlignment="Center" Foreground="White" Text="My Balance" />
+            </Grid>
+        </Button>
+
+        <!-- Reports nav button (kept from original, now Tag="5" placeholder) -->
+        <Button Height="32" Margin="25,334,715,0" VerticalAlignment="Top" HorizontalContentAlignment="Left"
+                Background="#348688" BorderBrush="{x:Null}" Click="ButtonHandler"
+                Style="{DynamicResource TransparentButtonStyle}" Tag="5">
+            <Grid>
+                <Path Width="12" Height="13" Margin="12,0,0,0" HorizontalAlignment="Left" VerticalAlignment="Center"
+                      Data="M3.75 6.75h16.5M3.75 12H12m-8.25 5.25h16.5"
+                      Stretch="Fill" Stroke="White" StrokeThickness="1.5" />
+                <TextBlock Margin="36,0,0,0" VerticalAlignment="Center" Foreground="White" Text="Reports" />
+            </Grid>
+        </Button>
+
+        <!-- Log Out -->
+        <Button Height="32" Margin="25,477,715,0" VerticalAlignment="Top" HorizontalContentAlignment="Left"
+                Background="#348688" BorderBrush="{x:Null}" Click="ButtonHandler"
+                Style="{DynamicResource TealButtonStyle}">
+            <Grid>
+                <Path Width="12" Height="13" Margin="12,0,0,0" HorizontalAlignment="Left" VerticalAlignment="Center"
+                      Data="M8.25 9V5.25A2.25 2.25 0 0 1 10.5 3h6a2.25 2.25 0 0 1 2.25 2.25v13.5A2.25 2.25 0 0 1 16.5 21h-6a2.25 2.25 0 0 1-2.25-2.25V15m-3 0-3-3m0 0 3-3m-3 3H15"
+                      Stretch="Fill" Stroke="#181926" StrokeThickness="1.5" />
+                <TextBlock Margin="36,0,0,0" VerticalAlignment="Center" Foreground="#181926" Text="Log Out" />
+            </Grid>
+        </Button>
+
+        <!-- Window chrome controls -->
+        <StackPanel Margin="0,0,3,494" HorizontalAlignment="Right" Orientation="Horizontal">
+            <Button x:Name="Minimize" Width="45" Height="45" VerticalAlignment="Center"
+                    Background="Transparent" BorderThickness="0" Click="ButtonHandler"
+                    Content="&#xE921;" FontFamily="Segoe MDL2 Assets" FontSize="10" Foreground="#7c7c84">
+                <Button.ToolTip>Minimize</Button.ToolTip>
+            </Button>
+            <Button x:Name="Maximize" Width="45" Height="45" VerticalAlignment="Center"
+                    Background="Transparent" BorderThickness="0" Click="ButtonHandler"
+                    Content="&#xE922;" FontFamily="Segoe MDL2 Assets" FontSize="10" Foreground="#7c7c84">
+                <Button.ToolTip>Maximize</Button.ToolTip>
+            </Button>
+            <Button x:Name="Exit" Width="45" Height="45" VerticalAlignment="Center"
+                    Background="Transparent" BorderThickness="0" Click="ButtonHandler"
+                    Content="&#xE8BB;" FontFamily="Segoe MDL2 Assets" FontSize="10" Foreground="#7c7c84">
+                <Button.ToolTip>Exit</Button.ToolTip>
+            </Button>
+        </StackPanel>
+
+        <Border Height="1" Margin="0,48,0,485" Background="#292A37" />
+
+        <!-- Notification bell -->
+        <Grid Width="25" Height="26" Margin="0,15,165,0" HorizontalAlignment="Right" VerticalAlignment="Top">
+            <Ellipse Width="25" Height="25" HorizontalAlignment="Right" VerticalAlignment="Top" Fill="#FF20242B" />
+            <Path Width="11" Height="12" Margin="7,6,0,0" HorizontalAlignment="Left" VerticalAlignment="Top"
+                  Data="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0"
+                  Stretch="Fill" Stroke="#FF747474" />
+        </Grid>
+
+        <Label Margin="60,13,0,0" HorizontalAlignment="Left" VerticalAlignment="Top"
+               Content="GoatFlow" FontFamily="/GOATflow;component/Assets/Fonts/Poppins/#Poppins"
+               FontSize="15" Foreground="White" Opacity=".8" />
+
+        <!-- Breadcrumb — update from code-behind -->
+        <Label x:Name="BreadcrumbSectionLabel"
+               Margin="225,13,0,0" HorizontalAlignment="Left" VerticalAlignment="Top"
+               Content="Merchant >" FontFamily="/GOATflow;component/Assets/Fonts/Poppins/#Poppins"
+               FontSize="15" Foreground="White" Opacity=".3" />
+        <Label x:Name="BreadcrumbPageLabel"
+               Margin="314,13,0,0" HorizontalAlignment="Left" VerticalAlignment="Top"
+               Content="Dashboard" FontFamily="/GOATflow;component/Assets/Fonts/Poppins/#Poppins"
+               FontSize="15" Foreground="White" Opacity=".8" />
+    </Grid>
+</Window>

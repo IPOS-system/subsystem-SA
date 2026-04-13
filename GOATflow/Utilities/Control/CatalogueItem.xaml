@@ -1,0 +1,86 @@
+﻿<UserControl
+    x:Class="GOATflow.Utilities.Control.CatalogueItem"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="clr-namespace:GOATflow.Utilities.Control"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    d:DesignHeight="50"
+    d:DesignWidth="668"
+    mc:Ignorable="d">
+    <Grid Height="50">
+        <Grid
+            Height="1"
+            Margin="13,0"
+            VerticalAlignment="Bottom"
+            Background="White"
+            Opacity="0.05" />
+        <Label
+            x:Name="ProductIDLabel"
+            Margin="9,0"
+            HorizontalAlignment="Left"
+            VerticalAlignment="Center"
+            Content="P001"
+            FontFamily="/Acrylix;component/Assets/Fonts/JetBrainsMono/#JetBrains Mono"
+            Foreground="White" />
+        <Label
+            x:Name="PackageTypeLabel"
+            Margin="117,0,0,0"
+            HorizontalAlignment="Left"
+            VerticalAlignment="Center"
+            Content="Box"
+            FontFamily="/Acrylix;component/Assets/Fonts/JetBrainsMono/#JetBrains Mono"
+            Foreground="White" />
+        <Button
+            x:Name="AddToBasketButton"
+            Width="40"
+            Height="26"
+            Margin="611,0,0,0"
+            HorizontalAlignment="Left"
+            VerticalAlignment="Center"
+            Background="White"
+            BorderBrush="{x:Null}"
+            Style="{DynamicResource WhiteButtonStyle}">
+
+            <TextBlock
+                Margin="3"
+                FontSize="11"
+                Foreground="#181926"
+                Text="Add" />
+        </Button>
+        <Label
+            x:Name="UnitLabel"
+            Margin="231,0,0,0"
+            HorizontalAlignment="Left"
+            VerticalAlignment="Center"
+            Content="Pieces"
+            FontFamily="/Acrylix;component/Assets/Fonts/JetBrainsMono/#JetBrains Mono"
+            Foreground="White" />
+        <Label
+            x:Name="UnitsPerPackLabel"
+            Margin="307,0,0,0"
+            HorizontalAlignment="Left"
+            VerticalAlignment="Center"
+            Content="10"
+            FontFamily="/Acrylix;component/Assets/Fonts/JetBrainsMono/#JetBrains Mono"
+            Foreground="White" />
+        <Label
+            x:Name="AvailabilityLabel"
+            Margin="404,0,0,0"
+            HorizontalAlignment="Left"
+            VerticalAlignment="Center"
+            Content="100"
+            FontFamily="/Acrylix;component/Assets/Fonts/JetBrainsMono/#JetBrains Mono"
+            Foreground="White" />
+        <Label
+            x:Name="PriceLabel"
+            Margin="509,0,0,0"
+            HorizontalAlignment="Left"
+            VerticalAlignment="Center"
+            Content="19.99"
+            FontFamily="/Acrylix;component/Assets/Fonts/JetBrainsMono/#JetBrains Mono"
+            Foreground="White" />
+
+    </Grid>
+
+</UserControl>

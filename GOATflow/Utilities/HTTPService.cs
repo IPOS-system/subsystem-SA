@@ -1,8 +1,12 @@
-﻿using System;
+﻿using GOATflow.Models;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using System;
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
+using System.Windows;
 
 namespace GOATflow.Utilities
 {
@@ -16,384 +20,439 @@ namespace GOATflow.Utilities
             _client = new HttpClient
             {
                 BaseAddress = new Uri(BaseUrl),
-                Timeout = TimeSpan.FromSeconds(300)
+                Timeout = TimeSpan.FromSeconds(30)
             };
             _client.DefaultRequestHeaders.Add("Accept", "application/json");
         }
 
-        // AUTH
+        // ── AUTH ─────────────────────────────────────────────────────────────
 
-        public async Task<string> PostAuthLoginAsync(string username, string password)
+        /// POST /api/auth/login
+        /// Returns true on success and populates Instance.*
+        public async Task<(bool success, string errorMessage)> PostAuthLoginAsync(string username, string password)
         {
             var payload = new { username, password };
             var response = await _client.PostAsJsonAsync("/api/auth/login", payload);
-            response.EnsureSuccessStatusCode();
-            return await response.Content.ReadAsStringAsync();
+            var body = await response.Content.ReadAsStringAsync();
+
+            if (response.IsSuccessStatusCode)
+            {
+                var success = JsonConvert.DeserializeObject<LoginSuccessResponse>(body)!;
+                Instance.UserID = success.UserId.ToString();
+                Instance.Username = success.Username;
+                Instance.Role = success.Role;
+                Instance.PaymentReminderDueToken = success.PaymentReminderDue.ToString();
+                Instance.MerchantID = success.MerchantId?.ToString() ?? "";
+                Instance.Token = success.Token;
+                SetBearerToken(success.Token);
+                return (true, "");
+            }
+            else
+            {
+                var err = JsonConvert.DeserializeObject<LoginErrorResponse>(body);
+                return (false, err?.Message ?? "Invalid credentials.");
+            }
         }
 
-        // ACCOUNTS
+        // ── ACCOUNTS ─────────────────────────────────────────────────────────
 
-        public async Task<string> GetAccountsMeAsync()
+        /// GET /api/accounts/me  — MERCHANT own profile
+        public async Task<MerchantDTO> GetAccountsMeAsync()
         {
-            var response = await _client.GetAsync("/api/accounts/me");
-            response.EnsureSuccessStatusCode();
-            return await response.Content.ReadAsStringAsync();
+            var json = await GetStringAsync("/api/accounts/me");
+            return JsonConvert.DeserializeObject<MerchantDTO>(json)!;
         }
 
-        public async Task<string> GetAccountsMerchantsAsync(string? search = null)
+        /// GET /api/accounts/merchants[?search=]
+        public async Task<List<MerchantDTO>> GetMerchantsAsync(string? search = null)
         {
-            var url = string.IsNullOrEmpty(search)
+            var url = string.IsNullOrWhiteSpace(search)
                 ? "/api/accounts/merchants"
                 : $"/api/accounts/merchants?search={Uri.EscapeDataString(search)}";
-            var response = await _client.GetAsync(url);
-            response.EnsureSuccessStatusCode();
-            return await response.Content.ReadAsStringAsync();
+            var json = await GetStringAsync(url);
+            return JsonConvert.DeserializeObject<List<MerchantDTO>>(json) ?? new();
         }
 
-        public async Task<string> GetAccountsMerchantByIdAsync(int id)
+        /// GET /api/accounts/merchants/{id}
+        public async Task<MerchantDTO> GetMerchantByIdAsync(int id)
         {
-            var response = await _client.GetAsync($"/api/accounts/merchants/{id}");
-            response.EnsureSuccessStatusCode();
-            return await response.Content.ReadAsStringAsync();
+            var json = await GetStringAsync($"/api/accounts/merchants/{id}");
+            return JsonConvert.DeserializeObject<MerchantDTO>(json)!;
         }
 
-        public async Task<string> PostAccountsMerchantAsync(string username, string password, string role,
-            string companyName, string address, string email, string phone,
-            decimal creditLimit, int? discountPlanId = null)
+        /// POST /api/accounts/merchant
+        /// discountPlanId is @NotNull on the server — must be provided
+        public async Task<MerchantDTO> PostMerchantAsync(
+            string username, string password, string companyName,
+            string address, string phone, string? fax, string email,
+            decimal creditLimit, int discountPlanId)
         {
-            var payload = new { username, password, role, companyName, address, email, phone, creditLimit, discountPlanId };
-            var response = await _client.PostAsJsonAsync("/api/accounts/merchant", payload);
-            response.EnsureSuccessStatusCode();
-            return await response.Content.ReadAsStringAsync();
+            var payload = new
+            {
+                username,
+                password,
+                companyName,
+                address,
+                phone,
+                fax,
+                email,
+                creditLimit,
+                discountPlanId
+            };
+            var json = await PostJsonAsync("/api/accounts/merchant", payload);
+            return JsonConvert.DeserializeObject<MerchantDTO>(json)!;
         }
 
-        public async Task<string> PutAccountsMerchantAsync(int id, string companyName, string address,
-            string email, string phone, decimal creditLimit, int? discountPlanId = null)
+        /// PUT /api/accounts/merchants/{id}  — all fields optional (null = unchanged)
+        public async Task<MerchantDTO> PutMerchantAsync(
+            int id, string? companyName = null, string? address = null,
+            string? phone = null, string? fax = null, string? email = null,
+            decimal? creditLimit = null, int? discountPlanId = null)
         {
-            var payload = new { companyName, address, email, phone, creditLimit, discountPlanId };
-            var response = await _client.PutAsJsonAsync($"/api/accounts/merchants/{id}", payload);
-            response.EnsureSuccessStatusCode();
-            return await response.Content.ReadAsStringAsync();
+            var payload = new { companyName, address, phone, fax, email, creditLimit, discountPlanId };
+            var json = await PutJsonAsync($"/api/accounts/merchants/{id}", payload);
+            return JsonConvert.DeserializeObject<MerchantDTO>(json)!;
         }
 
-        public async Task<string> PutAccountsMerchantRestoreAsync(int id)
+        /// PUT /api/accounts/merchants/{id}/restore
+        public async Task<MerchantDTO> PutMerchantRestoreAsync(int id)
         {
-            var response = await _client.PutAsJsonAsync($"/api/accounts/merchants/{id}/restore", new { });
-            response.EnsureSuccessStatusCode();
-            return await response.Content.ReadAsStringAsync();
+            var json = await PutJsonAsync($"/api/accounts/merchants/{id}/restore", new { });
+            return JsonConvert.DeserializeObject<MerchantDTO>(json)!;
         }
 
-        public async Task<string> GetAccountsStaffAsync()
+        /// GET /api/accounts/staff
+        public async Task<List<StaffDTO>> GetStaffAsync()
         {
-            var response = await _client.GetAsync("/api/accounts/staff");
-            response.EnsureSuccessStatusCode();
-            return await response.Content.ReadAsStringAsync();
+            var json = await GetStringAsync("/api/accounts/staff");
+            return JsonConvert.DeserializeObject<List<StaffDTO>>(json) ?? new();
         }
 
-        public async Task<string> PostAccountsStaffAsync(string username, string password, string role)
+        /// POST /api/accounts/staff  — role: ADMIN | MANAGER | ACCOUNTANT | DIRECTOR
+        public async Task<StaffDTO> PostStaffAsync(string username, string password, string role)
         {
             var payload = new { username, password, role };
-            var response = await _client.PostAsJsonAsync("/api/accounts/staff", payload);
-            response.EnsureSuccessStatusCode();
-            return await response.Content.ReadAsStringAsync();
+            var json = await PostJsonAsync("/api/accounts/staff", payload);
+            return JsonConvert.DeserializeObject<StaffDTO>(json)!;
         }
 
-        public async Task<string> PutAccountDeactivateAsync(int id)
+        /// PUT /api/accounts/{id}/deactivate  — returns 204
+        public async Task PutDeactivateAsync(int id)
         {
-            var response = await _client.PutAsJsonAsync($"/api/accounts/{id}/deactivate", new { });
-            response.EnsureSuccessStatusCode();
-            return await response.Content.ReadAsStringAsync();
+            var r = await _client.PutAsJsonAsync($"/api/accounts/{id}/deactivate", new { });
+            r.EnsureSuccessStatusCode();
         }
 
-        public async Task<string> PutAccountReactivateAsync(int id)
+        /// PUT /api/accounts/{id}/reactivate  — returns 204
+        public async Task PutReactivateAsync(int id)
         {
-            var response = await _client.PutAsJsonAsync($"/api/accounts/{id}/reactivate", new { });
-            response.EnsureSuccessStatusCode();
-            return await response.Content.ReadAsStringAsync();
+            var r = await _client.PutAsJsonAsync($"/api/accounts/{id}/reactivate", new { });
+            r.EnsureSuccessStatusCode();
         }
 
-        public async Task<string> PutAccountResetPasswordAsync(int id, string newPassword)
+        /// PUT /api/accounts/{id}/reset-password  — returns 204
+        public async Task PutResetPasswordAsync(int id, string newPassword)
         {
-            var payload = new { newPassword };
-            var response = await _client.PutAsJsonAsync($"/api/accounts/{id}/reset-password", payload);
-            response.EnsureSuccessStatusCode();
-            return await response.Content.ReadAsStringAsync();
+            var r = await _client.PutAsJsonAsync($"/api/accounts/{id}/reset-password",
+                new { newPassword });
+            r.EnsureSuccessStatusCode();
         }
 
-        // CATALOGUE
-
-        public async Task<string> GetCatalogueAsync(string? search = null)
+        /// PUT /api/accounts/{id}/change-role?newRole=  — returns StaffDTO
+        public async Task<StaffDTO> PutChangeRoleAsync(int id, string newRole)
         {
-            var url = string.IsNullOrEmpty(search)
+            var r = await _client.PutAsJsonAsync(
+                $"/api/accounts/{id}/change-role?newRole={Uri.EscapeDataString(newRole)}", new { });
+            var body = await r.Content.ReadAsStringAsync();
+            r.EnsureSuccessStatusCode();
+            return JsonConvert.DeserializeObject<StaffDTO>(body)!;
+        }
+
+        // ── CATALOGUE ────────────────────────────────────────────────────────
+
+        /// GET /api/catalogue[?search=]  — active products, merchant-facing
+        public async Task<List<CatalogueItemDTO>> GetCatalogueAsync(string? search = null)
+        {
+            var url = string.IsNullOrWhiteSpace(search)
                 ? "/api/catalogue"
                 : $"/api/catalogue?search={Uri.EscapeDataString(search)}";
-            var response = await _client.GetAsync(url);
-            response.EnsureSuccessStatusCode();
-            return await response.Content.ReadAsStringAsync();
+            var json = await GetStringAsync(url);
+            return JsonConvert.DeserializeObject<List<CatalogueItemDTO>>(json) ?? new();
         }
 
-        public async Task<string> GetCatalogueAdminAsync()
+        /// GET /api/catalogue/admin  — all products including inactive
+        public async Task<List<AdminCatalogueItemDTO>> GetCatalogueAdminAsync()
         {
-            var response = await _client.GetAsync("/api/catalogue/admin");
-            response.EnsureSuccessStatusCode();
-            return await response.Content.ReadAsStringAsync();
+            var json = await GetStringAsync("/api/catalogue/admin");
+            return JsonConvert.DeserializeObject<List<AdminCatalogueItemDTO>>(json) ?? new();
         }
 
-        public async Task<string> GetCatalogueAdminByIdAsync(int id)
+        /// GET /api/catalogue/admin/{productId}
+        public async Task<AdminCatalogueItemDTO> GetCatalogueAdminByIdAsync(string productId)
         {
-            var response = await _client.GetAsync($"/api/catalogue/admin/{id}");
-            response.EnsureSuccessStatusCode();
-            return await response.Content.ReadAsStringAsync();
+            var json = await GetStringAsync($"/api/catalogue/admin/{Uri.EscapeDataString(productId)}");
+            return JsonConvert.DeserializeObject<AdminCatalogueItemDTO>(json)!;
         }
 
-        public async Task<string> PostCatalogueAsync(string productId, string name, string description,
-            decimal price, int availability)
+        /// POST /api/catalogue
+        public async Task<AdminCatalogueItemDTO> PostCatalogueAsync(
+            string productId, string description, string? packageType, string? unit,
+            int unitsPerPack, decimal unitPrice, int availability,
+            int minStockLevel, decimal reorderBufferPct = 10m)
         {
-            var payload = new { productId, name, description, price, availability };
-            var response = await _client.PostAsJsonAsync("/api/catalogue", payload);
-            response.EnsureSuccessStatusCode();
-            return await response.Content.ReadAsStringAsync();
+            var payload = new
+            {
+                productId,
+                description,
+                packageType,
+                unit,
+                unitsPerPack,
+                unitPrice,
+                availability,
+                minStockLevel,
+                reorderBufferPct
+            };
+            var json = await PostJsonAsync("/api/catalogue", payload);
+            return JsonConvert.DeserializeObject<AdminCatalogueItemDTO>(json)!;
         }
 
-        public async Task<string> PutCatalogueAsync(int id, string name, string description, decimal price)
+        /// PUT /api/catalogue/{productId}  — all fields optional
+        public async Task<AdminCatalogueItemDTO> PutCatalogueAsync(
+            string productId, string? description = null, string? packageType = null,
+            string? unit = null, int? unitsPerPack = null, decimal? unitPrice = null,
+            int? minStockLevel = null, decimal? reorderBufferPct = null)
         {
-            var payload = new { name, description, price };
-            var response = await _client.PutAsJsonAsync($"/api/catalogue/{id}", payload);
-            response.EnsureSuccessStatusCode();
-            return await response.Content.ReadAsStringAsync();
+            var payload = new
+            {
+                description,
+                packageType,
+                unit,
+                unitsPerPack,
+                unitPrice,
+                minStockLevel,
+                reorderBufferPct
+            };
+            var json = await PutJsonAsync($"/api/catalogue/{Uri.EscapeDataString(productId)}", payload);
+            return JsonConvert.DeserializeObject<AdminCatalogueItemDTO>(json)!;
         }
 
-        public async Task<string> PutCatalogueDeactivateAsync(int id)
+        /// PUT /api/catalogue/{productId}/deactivate  — 204
+        public async Task PutCatalogueDeactivateAsync(string productId)
         {
-            var response = await _client.PutAsJsonAsync($"/api/catalogue/{id}/deactivate", new { });
-            response.EnsureSuccessStatusCode();
-            return await response.Content.ReadAsStringAsync();
+            var r = await _client.PutAsJsonAsync(
+                $"/api/catalogue/{Uri.EscapeDataString(productId)}/deactivate", new { });
+            r.EnsureSuccessStatusCode();
         }
 
-        public async Task<string> PutCatalogueReactivateAsync(int id)
+        /// PUT /api/catalogue/{productId}/reactivate  — 204
+        public async Task PutCatalogueReactivateAsync(string productId)
         {
-            var response = await _client.PutAsJsonAsync($"/api/catalogue/{id}/reactivate", new { });
-            response.EnsureSuccessStatusCode();
-            return await response.Content.ReadAsStringAsync();
+            var r = await _client.PutAsJsonAsync(
+                $"/api/catalogue/{Uri.EscapeDataString(productId)}/reactivate", new { });
+            r.EnsureSuccessStatusCode();
         }
 
-        public async Task<string> PostCatalogueStockAsync(int id, int quantityAdded)
+        /// POST /api/catalogue/{productId}/stock  — field is "quantity" not "quantityAdded"
+        public async Task<AdminCatalogueItemDTO> PostCatalogueStockAsync(string productId, int quantity)
         {
-            var payload = new { quantityAdded };
-            var response = await _client.PostAsJsonAsync($"/api/catalogue/{id}/stock", payload);
-            response.EnsureSuccessStatusCode();
-            return await response.Content.ReadAsStringAsync();
+            var json = await PostJsonAsync(
+                $"/api/catalogue/{Uri.EscapeDataString(productId)}/stock",
+                new { quantity });
+            return JsonConvert.DeserializeObject<AdminCatalogueItemDTO>(json)!;
         }
 
-        // ORDERS
+        // ── ORDERS ───────────────────────────────────────────────────────────
 
-        public async Task<string> PostOrderAsync(List<OrderItem> items)
+        /// POST /api/orders — items use productId (String) + quantity (int)
+        public async Task<OrderDTO> PostOrderAsync(List<OrderLineRequest> items)
         {
-            var payload = new { items };
-            var response = await _client.PostAsJsonAsync("/api/orders", payload);
-            response.EnsureSuccessStatusCode();
-            return await response.Content.ReadAsStringAsync();
+            var json = await PostJsonAsync("/api/orders", new { items });
+            return JsonConvert.DeserializeObject<OrderDTO>(json)!;
         }
 
-        public async Task<string> GetOrderByIdAsync(int id)
+        /// GET /api/orders/{orderId}  — orderId is a String e.g. "ORD-20260406-0001"
+        public async Task<OrderDTO> GetOrderByIdAsync(string orderId)
         {
-            var response = await _client.GetAsync($"/api/orders/{id}");
-            response.EnsureSuccessStatusCode();
-            return await response.Content.ReadAsStringAsync();
+            var json = await GetStringAsync($"/api/orders/{Uri.EscapeDataString(orderId)}");
+            return JsonConvert.DeserializeObject<OrderDTO>(json)!;
         }
 
-        public async Task<string> GetOrdersByMerchantIdAsync(int merchantId)
+        /// GET /api/orders/merchant/{merchantId}
+        public async Task<List<OrderDTO>> GetOrdersByMerchantAsync(int merchantId)
         {
-            var response = await _client.GetAsync($"/api/orders/merchant/{merchantId}");
-            response.EnsureSuccessStatusCode();
-            return await response.Content.ReadAsStringAsync();
+            var json = await GetStringAsync($"/api/orders/merchant/{merchantId}");
+            return JsonConvert.DeserializeObject<List<OrderDTO>>(json) ?? new();
         }
 
-        public async Task<string> GetOrdersAsync(string? status = null)
+        /// GET /api/orders[?status=]
+        public async Task<List<OrderDTO>> GetAllOrdersAsync(string? status = null)
         {
-            var url = string.IsNullOrEmpty(status)
+            var url = string.IsNullOrWhiteSpace(status)
                 ? "/api/orders"
                 : $"/api/orders?status={Uri.EscapeDataString(status)}";
-            var response = await _client.GetAsync(url);
-            response.EnsureSuccessStatusCode();
-            return await response.Content.ReadAsStringAsync();
+            var json = await GetStringAsync(url);
+            return JsonConvert.DeserializeObject<List<OrderDTO>>(json) ?? new();
         }
 
-        public async Task<string> PutOrderStatusAsync(int id, string status)
+        /// PUT /api/orders/{orderId}/status  — body: { "status": "PROCESSING" }
+        public async Task<OrderDTO> PutOrderStatusAsync(string orderId, string status)
         {
-            var payload = new { status };
-            var response = await _client.PutAsJsonAsync($"/api/orders/{id}/status", payload);
-            response.EnsureSuccessStatusCode();
-            return await response.Content.ReadAsStringAsync();
+            var json = await PutJsonAsync(
+                $"/api/orders/{Uri.EscapeDataString(orderId)}/status",
+                new { status });
+            return JsonConvert.DeserializeObject<OrderDTO>(json)!;
         }
 
-        public async Task<string> PutOrderDispatchAsync(int id, string courier, string courierRef,
+        /// PUT /api/orders/{orderId}/dispatch
+        /// dispatchDate and expectedDelivery must be ISO 8601 e.g. "2026-04-06T10:00:00"
+        public async Task<OrderDTO> PutOrderDispatchAsync(
+            string orderId, string courier, string courierRef,
             string dispatchDate, string expectedDelivery)
         {
             var payload = new { courier, courierRef, dispatchDate, expectedDelivery };
-            var response = await _client.PutAsJsonAsync($"/api/orders/{id}/dispatch", payload);
-            response.EnsureSuccessStatusCode();
-            return await response.Content.ReadAsStringAsync();
+            var json = await PutJsonAsync(
+                $"/api/orders/{Uri.EscapeDataString(orderId)}/dispatch", payload);
+            return JsonConvert.DeserializeObject<OrderDTO>(json)!;
         }
 
-        // INVOICES
+        // ── INVOICES ─────────────────────────────────────────────────────────
 
-        public async Task<string> GetInvoiceByIdAsync(string id)
+        /// GET /api/invoices/{invoiceId}
+        public async Task<InvoiceDTO> GetInvoiceByIdAsync(string invoiceId)
         {
-            var response = await _client.GetAsync($"/api/invoices/{id}");
-            response.EnsureSuccessStatusCode();
-            return await response.Content.ReadAsStringAsync();
+            var json = await GetStringAsync($"/api/invoices/{Uri.EscapeDataString(invoiceId)}");
+            return JsonConvert.DeserializeObject<InvoiceDTO>(json)!;
         }
 
-        public async Task<string> GetInvoicesByMerchantIdAsync(int merchantId)
+        /// GET /api/invoices/merchant/{merchantId}
+        public async Task<List<InvoiceDTO>> GetInvoicesByMerchantAsync(int merchantId)
         {
-            var response = await _client.GetAsync($"/api/invoices/merchant/{merchantId}");
-            response.EnsureSuccessStatusCode();
-            return await response.Content.ReadAsStringAsync();
+            var json = await GetStringAsync($"/api/invoices/merchant/{merchantId}");
+            return JsonConvert.DeserializeObject<List<InvoiceDTO>>(json) ?? new();
         }
 
-        public async Task<string> GetUnpaidInvoicesByMerchantIdAsync(int merchantId)
+        /// GET /api/invoices/merchant/{merchantId}/unpaid
+        public async Task<List<InvoiceDTO>> GetUnpaidInvoicesAsync(int merchantId)
         {
-            var response = await _client.GetAsync($"/api/invoices/merchant/{merchantId}/unpaid");
-            response.EnsureSuccessStatusCode();
-            return await response.Content.ReadAsStringAsync();
+            var json = await GetStringAsync($"/api/invoices/merchant/{merchantId}/unpaid");
+            return JsonConvert.DeserializeObject<List<InvoiceDTO>>(json) ?? new();
         }
 
-        // PAYMENTS
+        // ── PAYMENTS ─────────────────────────────────────────────────────────
 
-        public async Task<string> PostPaymentAsync(int merchantId, string invoiceId, decimal amountPaid,
+        /// POST /api/payments  — returns updated InvoiceDTO (201)
+        /// paymentDate must be ISO 8601 string e.g. "2026-04-06T14:00:00"
+        /// paymentMethod: "BANK_TRANSFER" | "CARD" | "CHEQUE"
+        public async Task<InvoiceDTO> PostPaymentAsync(
+            int merchantId, string invoiceId, decimal amountPaid,
             string paymentMethod, string paymentDate, string? notes = null)
         {
             var payload = new { merchantId, invoiceId, amountPaid, paymentMethod, paymentDate, notes };
-            var response = await _client.PostAsJsonAsync("/api/payments", payload);
-            response.EnsureSuccessStatusCode();
-            return await response.Content.ReadAsStringAsync();
+            var json = await PostJsonAsync("/api/payments", payload);
+            return JsonConvert.DeserializeObject<InvoiceDTO>(json)!;
         }
 
-        // DISCOUNT PLANS
+        // ── DISCOUNT PLANS ───────────────────────────────────────────────────
 
-        public async Task<string> GetDiscountPlansAsync()
+        /// GET /api/discount-plans
+        public async Task<List<DiscountPlanDTO>> GetDiscountPlansAsync()
         {
-            var response = await _client.GetAsync("/api/discount-plans");
-            response.EnsureSuccessStatusCode();
-            return await response.Content.ReadAsStringAsync();
+            var json = await GetStringAsync("/api/discount-plans");
+            return JsonConvert.DeserializeObject<List<DiscountPlanDTO>>(json) ?? new();
         }
 
-        public async Task<string> GetDiscountPlanByIdAsync(int id)
+        /// GET /api/discount-plans/{id}
+        public async Task<DiscountPlanDTO> GetDiscountPlanByIdAsync(int id)
         {
-            var response = await _client.GetAsync($"/api/discount-plans/{id}");
-            response.EnsureSuccessStatusCode();
-            return await response.Content.ReadAsStringAsync();
+            var json = await GetStringAsync($"/api/discount-plans/{id}");
+            return JsonConvert.DeserializeObject<DiscountPlanDTO>(json)!;
         }
 
-        public async Task<string> PostDiscountPlanFixedAsync(string name, decimal discountRate)
+        /// POST /api/discount-plans/fixed  — field is "planName" + "fixedRate"
+        public async Task<DiscountPlanDTO> PostFixedPlanAsync(string planName, decimal fixedRate)
         {
-            var payload = new { name, discountRate };
-            var response = await _client.PostAsJsonAsync("/api/discount-plans/fixed", payload);
-            response.EnsureSuccessStatusCode();
-            return await response.Content.ReadAsStringAsync();
+            var json = await PostJsonAsync("/api/discount-plans/fixed", new { planName, fixedRate });
+            return JsonConvert.DeserializeObject<DiscountPlanDTO>(json)!;
         }
 
-        public async Task<string> PostDiscountPlanFlexibleAsync(string name, List<DiscountTier> tiers)
+        /// POST /api/discount-plans/flexible  — tiers: [{minOrderVal, maxOrderVal?, discountRate}]
+        public async Task<DiscountPlanDTO> PostFlexiblePlanAsync(
+            string planName, List<FlexTierRequest> tiers)
         {
-            var payload = new { name, tiers };
-            var response = await _client.PostAsJsonAsync("/api/discount-plans/flexible", payload);
-            response.EnsureSuccessStatusCode();
-            return await response.Content.ReadAsStringAsync();
+            var json = await PostJsonAsync("/api/discount-plans/flexible", new { planName, tiers });
+            return JsonConvert.DeserializeObject<DiscountPlanDTO>(json)!;
         }
 
-        // REPORTS
+        // ── REPORTS ──────────────────────────────────────────────────────────
 
-        public async Task<string> GetReportTurnoverAsync(string from, string to)
+        public async Task<TurnoverReportDTO> GetReportTurnoverAsync(string from, string to)
         {
-            var response = await _client.GetAsync($"/api/reports/turnover?from={from}&to={to}");
-            response.EnsureSuccessStatusCode();
-            return await response.Content.ReadAsStringAsync();
+            var json = await GetStringAsync($"/api/reports/turnover?from={from}&to={to}");
+            return JsonConvert.DeserializeObject<TurnoverReportDTO>(json)!;
         }
 
-        public async Task<string> GetReportMerchantSummaryAsync(int merchantId, string from, string to)
+        public async Task<MerchantOrdersSummaryDTO> GetReportMerchantSummaryAsync(
+            int merchantId, string from, string to)
         {
-            var response = await _client.GetAsync($"/api/reports/merchant-summary?merchantId={merchantId}&from={from}&to={to}");
-            response.EnsureSuccessStatusCode();
-            return await response.Content.ReadAsStringAsync();
+            var json = await GetStringAsync(
+                $"/api/reports/merchant-summary?merchantId={merchantId}&from={from}&to={to}");
+            return JsonConvert.DeserializeObject<MerchantOrdersSummaryDTO>(json)!;
         }
 
-        public async Task<string> GetReportMerchantDetailedAsync(int merchantId, string from, string to)
+        public async Task<MerchantDetailedReportDTO> GetReportMerchantDetailedAsync(
+            int merchantId, string from, string to)
         {
-            var response = await _client.GetAsync($"/api/reports/merchant-detailed?merchantId={merchantId}&from={from}&to={to}");
-            response.EnsureSuccessStatusCode();
-            return await response.Content.ReadAsStringAsync();
+            var json = await GetStringAsync(
+                $"/api/reports/merchant-detailed?merchantId={merchantId}&from={from}&to={to}");
+            return JsonConvert.DeserializeObject<MerchantDetailedReportDTO>(json)!;
         }
 
-        public async Task<string> GetReportInvoiceListAsync(int merchantId, string from, string to)
+        public async Task<InvoiceListReportDTO> GetReportInvoiceListAsync(
+            int merchantId, string from, string to)
         {
-            var response = await _client.GetAsync($"/api/reports/invoice-list?merchantId={merchantId}&from={from}&to={to}");
-            response.EnsureSuccessStatusCode();
-            return await response.Content.ReadAsStringAsync();
+            var json = await GetStringAsync(
+                $"/api/reports/invoice-list?merchantId={merchantId}&from={from}&to={to}");
+            return JsonConvert.DeserializeObject<InvoiceListReportDTO>(json)!;
         }
 
-        public async Task<string> GetReportAllInvoicesAsync(string from, string to)
+        public async Task<InvoiceListReportDTO> GetReportAllInvoicesAsync(string from, string to)
         {
-            var response = await _client.GetAsync($"/api/reports/all-invoices?from={from}&to={to}");
-            response.EnsureSuccessStatusCode();
-            return await response.Content.ReadAsStringAsync();
+            var json = await GetStringAsync($"/api/reports/all-invoices?from={from}&to={to}");
+            return JsonConvert.DeserializeObject<InvoiceListReportDTO>(json)!;
         }
 
-        public async Task<string> GetReportLowStockAsync()
+        public async Task<LowStockReportDTO> GetReportLowStockAsync()
         {
-            var response = await _client.GetAsync("/api/reports/low-stock");
-            response.EnsureSuccessStatusCode();
-            return await response.Content.ReadAsStringAsync();
+            var json = await GetStringAsync("/api/reports/low-stock");
+            return JsonConvert.DeserializeObject<LowStockReportDTO>(json)!;
         }
 
-        // NOTIFICATIONS
+        // ── NOTIFICATIONS ────────────────────────────────────────────────────
 
-        public async Task<string> GetNotificationsAsync()
+        public async Task<NotificationDTO> GetNotificationsAsync()
         {
-            var response = await _client.GetAsync("/api/notifications");
-            response.EnsureSuccessStatusCode();
-            return await response.Content.ReadAsStringAsync();
+            var json = await GetStringAsync("/api/notifications");
+            return JsonConvert.DeserializeObject<NotificationDTO>(json)!;
         }
 
-        // COMMERCIAL APPLICATIONS
+        // ── AUDIT LOG ────────────────────────────────────────────────────────
 
-        public async Task<string> PostCommercialApplicationAsync(string companyName, string companyRegNo,
-            string directors, string businessType, string address, string email, string phone)
+        public async Task<List<AuditLogDTO>> GetAuditLogAsync(
+            string? userId = null, string? targetType = null,
+            string? targetId = null, string? from = null, string? to = null)
         {
-            var payload = new { companyName, companyRegNo, directors, businessType, address, email, phone };
-            var response = await _client.PostAsJsonAsync("/api/applications/commercial", payload);
-            response.EnsureSuccessStatusCode();
-            return await response.Content.ReadAsStringAsync();
+            var parts = new List<string>();
+            if (!string.IsNullOrWhiteSpace(userId)) parts.Add($"userId={userId}");
+            if (!string.IsNullOrWhiteSpace(targetType)) parts.Add($"targetType={Uri.EscapeDataString(targetType)}");
+            if (!string.IsNullOrWhiteSpace(targetId)) parts.Add($"targetId={Uri.EscapeDataString(targetId)}");
+            if (!string.IsNullOrWhiteSpace(from)) parts.Add($"from={from}");
+            if (!string.IsNullOrWhiteSpace(to)) parts.Add($"to={to}");
+            var qs = parts.Count > 0 ? "?" + string.Join("&", parts) : "";
+            var json = await GetStringAsync("/api/audit-log" + qs);
+            return JsonConvert.DeserializeObject<List<AuditLogDTO>>(json) ?? new();
         }
 
-        public async Task<string> GetApplicationsAsync(string? status = null)
-        {
-            var url = string.IsNullOrEmpty(status)
-                ? "/api/applications"
-                : $"/api/applications?status={Uri.EscapeDataString(status)}";
-            var response = await _client.GetAsync(url);
-            response.EnsureSuccessStatusCode();
-            return await response.Content.ReadAsStringAsync();
-        }
-
-        public async Task<string> PutApplicationApproveAsync(int id)
-        {
-            var response = await _client.PutAsJsonAsync($"/api/applications/{id}/approve", new { });
-            response.EnsureSuccessStatusCode();
-            return await response.Content.ReadAsStringAsync();
-        }
-
-        public async Task<string> PutApplicationRejectAsync(int id, string? reason = null)
-        {
-            var url = string.IsNullOrEmpty(reason)
-                ? $"/api/applications/{id}/reject"
-                : $"/api/applications/{id}/reject?reason={Uri.EscapeDataString(reason)}";
-            var response = await _client.PutAsJsonAsync(url, new { });
-            response.EnsureSuccessStatusCode();
-            return await response.Content.ReadAsStringAsync();
-        }
-
-        // UTILITY
+        // ── UTILITY ──────────────────────────────────────────────────────────
 
         public void SetBearerToken(string token)
         {
@@ -402,17 +461,61 @@ namespace GOATflow.Utilities
         }
 
         public void Dispose() => _client.Dispose();
+
+        // ── Private helpers ──────────────────────────────────────────────────
+
+        private async Task<string> GetStringAsync(string url)
+        {
+            var r = await _client.GetAsync(url);
+            var body = await r.Content.ReadAsStringAsync();
+            if (!r.IsSuccessStatusCode)
+                throw new HttpRequestException(ExtractError(body, (int)r.StatusCode));
+            return body;
+        }
+
+        private async Task<string> PostJsonAsync(string url, object payload)
+        {
+            var r = await _client.PostAsJsonAsync(url, payload);
+            var body = await r.Content.ReadAsStringAsync();
+            if (!r.IsSuccessStatusCode)
+                throw new HttpRequestException(ExtractError(body, (int)r.StatusCode));
+            return body;
+        }
+
+        private async Task<string> PutJsonAsync(string url, object payload)
+        {
+            var r = await _client.PutAsJsonAsync(url, payload);
+            var body = await r.Content.ReadAsStringAsync();
+            if (!r.IsSuccessStatusCode)
+                throw new HttpRequestException(ExtractError(body, (int)r.StatusCode));
+            return body;
+        }
+
+        /// Extracts the human-readable message from ApiErrorResponse, or falls back to status code.
+        private static string ExtractError(string body, int status)
+        {
+            try
+            {
+                var err = JsonConvert.DeserializeObject<LoginErrorResponse>(body);
+                if (!string.IsNullOrWhiteSpace(err?.Message)) return err.Message;
+            }
+            catch { }
+            return $"HTTP {status}";
+        }
     }
 
-    public class OrderItem
+    // ── Request helpers used by HttpService ──────────────────────────────────
+
+    public class OrderLineRequest
     {
-        public string ProductId { get; set; } = string.Empty;
-        public int Quantity { get; set; }
+        [JsonProperty("productId")] public string ProductId { get; set; } = "";
+        [JsonProperty("quantity")] public int Quantity { get; set; }
     }
 
-    public class DiscountTier
+    public class FlexTierRequest
     {
-        public decimal MinSpend { get; set; }
-        public decimal DiscountRate { get; set; }
+        [JsonProperty("minOrderVal")] public decimal MinOrderVal { get; set; }
+        [JsonProperty("maxOrderVal")] public decimal? MaxOrderVal { get; set; }
+        [JsonProperty("discountRate")] public decimal DiscountRate { get; set; }
     }
 }

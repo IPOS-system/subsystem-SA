@@ -64,15 +64,15 @@
                         Height="45"
                         Margin="35,168,34,185"
                         Background="Transparent"
-                        Style="{DynamicResource UsernameTextBoxStyle}"
+                        Style="{StaticResource UsernameTextBoxStyle}"
                         Text="" />
                     <TextBox
                         x:Name="PasswordBox"
                         Height="45"
                         Margin="35,225,34,128"
                         Background="Transparent"
-                        Style="{DynamicResource PasswordTextBoxStyle}"
-                        Text="" />
+                        Style="{StaticResource PasswordTextBoxStyle}"
+                            Text="{Binding Text, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" /> 
                     <Button
                         x:Name="LoginButton"
                         Height="32"
@@ -109,7 +109,7 @@
                 Foreground="White"
                 Opacity=".1" />
             <StackPanel
-                Margin="0,0,0,342"
+                Margin="0,0,0,354"
                 HorizontalAlignment="Right"
                 Orientation="Horizontal">
 
