@@ -1,6 +1,7 @@
 package com.ipos.ipos_sa.controller;
 
 import com.ipos.ipos_sa.dto.order.*;
+import com.ipos.ipos_sa.dto.order.PlaceOrderResponse.*;
 import com.ipos.ipos_sa.entity.Merchant;
 import com.ipos.ipos_sa.entity.Order;
 import com.ipos.ipos_sa.entity.User;
@@ -12,6 +13,7 @@ import com.ipos.ipos_sa.service.AccountService;
 import com.ipos.ipos_sa.service.OrderService;
 import jakarta.validation.Valid;
 import java.util.List;
+import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -39,35 +41,34 @@ public class OrderController {
   private final UserRepository userRepository;
   private final MerchantRepository merchantRepository;
 
-  // ── Place Order (UC-14) ───────────────────────────────────────────────────
-
-  /**
-   * POST /api/orders Places a new order for the authenticated merchant. The merchant is identified
-   * from the JWT — they can only order for themselves. Before placing, the merchant's account
-   * status is re-checked (15/30-day rule).
-   */
-  @PostMapping
-  public ResponseEntity<OrderDTO> placeOrder(
+@PostMapping
+  public ResponseEntity<Map<String, Object>> placeOrder(
       @Valid @RequestBody PlaceOrderRequest request, Authentication auth) {
 
-    requireRole(auth, User.Role.MERCHANT);
-    User user = resolveUser(auth);
+    try {
+      requireRole(auth, User.Role.MERCHANT);
+      User user = resolveUser(auth);
 
-    Merchant merchant =
-        merchantRepository
-            .findByUser(user)
-            .orElseThrow(
-                () ->
-                    new ResourceNotFoundException(
-                        "Merchant profile not found for user: " + user.getUsername()));
+      Merchant merchant =
+          merchantRepository
+              .findByUser(user)
+              .orElseThrow(
+                  () -> new ResourceNotFoundException(
+                      "Merchant profile not found for user: " + user.getUsername()));
 
-    // Re-check account status before ordering (credit control)
-    accountService.checkAndUpdateAccountStatus(merchant.getMerchantId());
+      accountService.checkAndUpdateAccountStatus(merchant.getMerchantId());
 
-    OrderDTO created = orderService.placeOrder(merchant.getMerchantId(), request, user);
+      OrderDTO created = orderService.placeOrder(merchant.getMerchantId(), request, user);
 
-    return ResponseEntity.status(HttpStatus.CREATED).body(created);
+      return ResponseEntity.status(HttpStatus.CREATED)
+          .body(Map.of("success", true, "message", "Order placed successfully"));
+
+    } catch (Exception e) {
+      return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+          .body(Map.of("success", false, "message", e.getMessage()));
+    }
   }
+
 
   // ── Incomplete Orders — MUST be before /{id} to avoid route shadowing ────
 
