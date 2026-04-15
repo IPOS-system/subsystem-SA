@@ -12,7 +12,7 @@ import org.hibernate.annotations.CreationTimestamp;
     uniqueConstraints =
         @UniqueConstraint(
             name = "uq_merchant_month",
-            columnNames = {"merchant_id", "year_month"}))
+            columnNames = {"merchant_id", "`year_month`"}))
 @Getter
 @Setter
 @NoArgsConstructor
@@ -28,7 +28,7 @@ public class MonthlyDiscountTracker {
   @JoinColumn(name = "merchant_id", nullable = false)
   private Merchant merchant;
 
-  @Column(name = "year_month", nullable = false, length = 7)
+  @Column(name = "`year_month`", nullable = false, length = 7)
   private String yearMonth;
 
   @Column(name = "total_order_value", nullable = false, precision = 12, scale = 2)
