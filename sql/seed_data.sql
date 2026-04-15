@@ -41,9 +41,9 @@ INSERT INTO users (user_id, username, password_hash, role, is_active) VALUES
 -- ============================================================================
 
 INSERT INTO users (user_id, username, password_hash, role, is_active) VALUES
-(8,  'city',    '$2b$10$BDHdDQYyUWVCs5QICj.qweNZIivQA/WYv7w8F0HerOO5OAE0g1bg.', 'MERCHANT', TRUE),
-(9,  'cosymed', '$2b$10$jYzR8.a4BxmcVUGK7CCwae/1tlKETcsRLSnRBpBASuiKoEFKi0O5W', 'MERCHANT', TRUE),
-(10, 'hello',   '$2b$10$OnUOlok9pz9Z7S4kXjz.zOOx1VivhaDdXv.wOLp42wpQ8BKGCJ30y', 'MERCHANT', TRUE);
+(8,  'city',    'city_password', 'MERCHANT', TRUE),
+(9,  'cosymed', 'cosymed_password', 'MERCHANT', TRUE),
+(10, 'hello',   'hello_password', 'MERCHANT', TRUE);
 
 -- ============================================================================
 -- 3. DISCOUNT PLANS

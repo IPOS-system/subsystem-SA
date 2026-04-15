@@ -28,7 +28,7 @@ import org.springframework.web.bind.annotation.*;
  * <p>Admin: GET /api/applications to review pending applications, PUT
  * /api/applications/{id}/approve or /reject to process them.
  *
- * <p>Role rules: POST /api/applications/commercial → any authenticated user (IPOS-PU service
+ * <p>Role rules: 
  * account) GET /api/applications → ADMIN, MANAGER PUT /api/applications/{id}/... → ADMIN
  */
 @Slf4j
@@ -48,8 +48,7 @@ public class ApplicationController {
    *
    * <p>Maps to: ICMAAPI.submitCA(CommercialApplicationForm)
    *
-   * <p>IPOS-PU authenticates first via POST /api/auth/login using a service account, then calls
-   * this endpoint with the Bearer token.
+   * <p>This endpoint is public and does not require authentication.
    *
    * <p>Returns the application ID as confirmation (matching the interface return type of String).
    */
@@ -147,7 +146,6 @@ public class ApplicationController {
     app.setStatus(CommercialApplication.ApplicationStatus.REJECTED);
     app.setReviewedBy(actingUser.getUserId());
     app.setReviewedAt(LocalDateTime.now());
-    if (reason != null) app.setNotes(reason);
     applicationRepository.save(app);
 
     log.info("Application {} rejected by userId={}", id, actingUser.getUserId());
@@ -170,7 +168,6 @@ public class ApplicationController {
         .submittedAt(app.getSubmittedAt())
         .reviewedBy(app.getReviewedBy())
         .reviewedAt(app.getReviewedAt())
-        .notes(app.getNotes())
         .build();
   }
 

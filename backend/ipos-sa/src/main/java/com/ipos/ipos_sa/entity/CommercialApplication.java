@@ -61,9 +61,6 @@ public class CommercialApplication {
   @Column(name = "reviewed_at")
   private LocalDateTime reviewedAt;
 
-  @Column(name = "notes", columnDefinition = "TEXT")
-  private String notes;
-
   public enum ApplicationStatus {
     PENDING,
     APPROVED,
