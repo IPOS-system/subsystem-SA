@@ -1,7 +1,6 @@
 package com.ipos.ipos_sa.controller;
 
 import com.ipos.ipos_sa.dto.order.*;
-import com.ipos.ipos_sa.dto.order.PlaceOrderResponse.*;
 import com.ipos.ipos_sa.entity.Merchant;
 import com.ipos.ipos_sa.entity.Order;
 import com.ipos.ipos_sa.entity.User;
@@ -13,7 +12,6 @@ import com.ipos.ipos_sa.service.AccountService;
 import com.ipos.ipos_sa.service.OrderService;
 import jakarta.validation.Valid;
 import java.util.List;
-import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -42,7 +40,7 @@ public class OrderController {
   private final MerchantRepository merchantRepository;
 
 @PostMapping
-  public ResponseEntity<Map<String, Object>> placeOrder(
+  public ResponseEntity<PlaceOrderResponse> placeOrder(
       @Valid @RequestBody PlaceOrderRequest request, Authentication auth) {
 
     try {
@@ -61,12 +59,40 @@ public class OrderController {
       OrderDTO created = orderService.placeOrder(merchant.getMerchantId(), request, user);
 
       return ResponseEntity.status(HttpStatus.CREATED)
-          .body(Map.of("success", true, "message", "Order placed successfully"));
+          .body(PlaceOrderResponse.success(created.getOrderId()));
+
+    } catch (com.ipos.ipos_sa.exception.ValidationException e) {
+      String errorCode = inferErrorCode(e.getMessage());
+      return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+          .body(PlaceOrderResponse.failure(errorCode, e.getMessage()));
+
+    } catch (ResourceNotFoundException e) {
+      return ResponseEntity.status(HttpStatus.NOT_FOUND)
+          .body(PlaceOrderResponse.failure("PRODUCT_NOT_FOUND", e.getMessage()));
+
+    } catch (AccessDeniedException e) {
+      return ResponseEntity.status(HttpStatus.FORBIDDEN)
+          .body(PlaceOrderResponse.failure("ACCESS_DENIED", e.getMessage()));
 
     } catch (Exception e) {
-      return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-          .body(Map.of("success", false, "message", e.getMessage()));
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+          .body(PlaceOrderResponse.failure("INTERNAL_ERROR", e.getMessage()));
     }
+  }
+
+  /**
+   * Maps validation error messages to machine-readable error codes
+   * so the CA subsystem can react programmatically.
+   */
+  private String inferErrorCode(String message) {
+    if (message == null) return "VALIDATION_ERROR";
+    String lower = message.toLowerCase();
+    if (lower.contains("suspended")) return "ACCOUNT_SUSPENDED";
+    if (lower.contains("in_default") || lower.contains("in default")) return "ACCOUNT_IN_DEFAULT";
+    if (lower.contains("insufficient stock")) return "INSUFFICIENT_STOCK";
+    if (lower.contains("not available") || lower.contains("inactive")) return "PRODUCT_INACTIVE";
+    if (lower.contains("credit")) return "CREDIT_LIMIT_EXCEEDED";
+    return "VALIDATION_ERROR";
   }
 
 
