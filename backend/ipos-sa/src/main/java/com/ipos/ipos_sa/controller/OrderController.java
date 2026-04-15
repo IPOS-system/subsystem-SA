@@ -107,7 +107,7 @@ public class OrderController {
    */
   @GetMapping("/incomplete")
   public ResponseEntity<List<OrderDTO>> getIncompleteOrders(Authentication auth) {
-    requireRole(auth, User.Role.ADMIN, User.Role.MANAGER);
+    requireRole(auth, User.Role.ADMIN, User.Role.MANAGER, User.Role.MERCHANT);
     return ResponseEntity.ok(orderService.getIncompleteOrders());
   }
 
@@ -193,7 +193,7 @@ public class OrderController {
       @Valid @RequestBody UpdateOrderStatusRequest request,
       Authentication auth) {
 
-    requireRole(auth, User.Role.ADMIN, User.Role.MANAGER);
+    requireRole(auth, User.Role.ADMIN, User.Role.MANAGER, User.Role.MERCHANT);
     User actingUser = resolveUser(auth);
 
     return ResponseEntity.ok(orderService.updateOrderStatus(id, request.getStatus(), actingUser));
