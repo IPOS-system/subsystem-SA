@@ -155,7 +155,7 @@ CREATE TABLE IF NOT EXISTS commercial_applications (
     directors        VARCHAR(255) NOT NULL,
     business_type    VARCHAR(100)  NOT NULL,
     address          VARCHAR(255) NOT NULL,
-    phone            VARCHAR(30),
+    phone            VARCHAR(30) NULL,
     status           ENUM('PENDING','APPROVED','REJECTED') NOT NULL DEFAULT 'PENDING',
     submitted_at     DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     reviewed_by      INT DEFAULT NULL,

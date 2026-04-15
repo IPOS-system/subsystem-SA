@@ -28,13 +28,13 @@ SET FOREIGN_KEY_CHECKS = 1;
 -- Roles: ADMIN, MANAGER, ACCOUNTANT, DIRECTOR, MERCHANT
 
 INSERT INTO users (user_id, username, password_hash, role, is_active) VALUES
-(1,  'sysdba',     '$2b$10$vHpVeABUrUJnD2Wj4azW1.OFMmdbfh8y/nMquAZHdLdWZVYMTSxX.', 'ADMIN',      TRUE),
-(2,  'manager',    '$2b$10$ZNPecfsqcQZ62oVz4EMvDOcAjMcSqAaw.2Wv5WFDMVVhdgz6S37ne', 'MANAGER',    TRUE),
-(3,  'accountant', '$2b$10$wMftxqvGuGwY.Mc/kSTGeO0oeV95N4vSRrvwXj8oHr0LIXfpsc6ma', 'ACCOUNTANT',  TRUE),
-(4,  'clerk',      '$2b$10$yGh0eEl1a5X1xBGOp0bSIunKr4FdYTxctQgkF54CiUuNnFBpKh7Sy', 'ACCOUNTANT',  TRUE),
-(5,  'warehouse1', '$2b$10$/cAKo/p6G/803lnlhEjoCuS2ZUA5rTMC/zyt.WsjXmixEG77Ry5Za', 'ADMIN',       TRUE),
-(6,  'warehouse2', '$2b$10$8uak34cSoNoTz.uDqtMJPuhTMW9OQNzc41Fjn1ZgidEPeG.P.1yG.', 'ADMIN',       TRUE),
-(7,  'delivery',   '$2b$10$8N7W9rZs63S.RTfhZ0yr3.glsTZmMxO0N055XhIJgzDAT8la8aHri', 'ADMIN',       TRUE);
+(1,  'Sysdba',     'London_weighting', 'ADMIN',      TRUE),
+(2,  'manager',    'Get_it_done', 'MANAGER',    TRUE),
+(3,  'accountant', 'Count_money', 'ACCOUNTANT',  TRUE),
+(4,  'clerk',      'Paperwork', 'ACCOUNTANT',  TRUE),
+(5,  'warehouse1', 'Get_a_beer', 'ADMIN',       TRUE),
+(6,  'warehouse2', 'Lot_smell', 'ADMIN',       TRUE),
+(7,  'delivery',   'Too_dark', 'ADMIN',       TRUE);
 
 -- ============================================================================
 -- 2. MERCHANT USER ACCOUNTS
@@ -43,8 +43,7 @@ INSERT INTO users (user_id, username, password_hash, role, is_active) VALUES
 INSERT INTO users (user_id, username, password_hash, role, is_active) VALUES
 (8,  'city',    '$2b$10$BDHdDQYyUWVCs5QICj.qweNZIivQA/WYv7w8F0HerOO5OAE0g1bg.', 'MERCHANT', TRUE),
 (9,  'cosymed', '$2b$10$jYzR8.a4BxmcVUGK7CCwae/1tlKETcsRLSnRBpBASuiKoEFKi0O5W', 'MERCHANT', TRUE),
-(10, 'hello',   '$2b$10$OnUOlok9pz9Z7S4kXjz.zOOx1VivhaDdXv.wOLp42wpQ8BKGCJ30y', 'MERCHANT', TRUE),
-(11, 'merchant', '$2b$10$OnUOlok9pz9Z7S4kXjz.zOOx1VivhaDdXv.wOLp42wpQ8BKGCJ30y', 'MERCHANT', TRUE);
+(10, 'hello',   '$2b$10$OnUOlok9pz9Z7S4kXjz.zOOx1VivhaDdXv.wOLp42wpQ8BKGCJ30y', 'MERCHANT', TRUE);
 
 -- ============================================================================
 -- 3. DISCOUNT PLANS
@@ -83,8 +82,7 @@ INSERT INTO discount_tiers (plan_id, min_order_val, max_order_val, discount_rate
 INSERT INTO merchants (merchant_id, user_id, company_name, address, phone, email, credit_limit, current_balance, account_status, status_changed_at, discount_plan_id, authorized_by, created_at) VALUES
 (1, 8,  'CityPharmacy',   'Northampton Square, London EC1V 0HB', '0207 040 8000', 'city@citypharmacy.co.uk',     10000.00, 0.00,    'NORMAL',    '2026-02-01 09:00:00', 1, 1, '2026-02-01 09:00:00'),
 (2, 9,  'Cosymed Ltd',    '25, Bond Street, London WC1V 8LS',    '0207 321 8001', 'info@cosymed.co.uk',           5000.00, 0.00,    'NORMAL',    '2026-02-01 09:00:00', 2, 1, '2026-02-01 09:00:00'),
-(3, 10, 'HelloPharmacy',  '12, Bond Street, London WC1V 9NS',    '0207 321 8002', 'hello@hellopharmacy.co.uk',     5000.00, 1455.00, 'SUSPENDED', '2026-04-15 00:00:00', 3, 1, '2026-02-01 09:00:00'),
-(4, 11, 'NewMerchant',    '123, New Street, London WC1V 9NS',    '0207 321 8003', 'merchant@newmerchant.co.uk', 5000.00, 0.00, 'NORMAL', '2026-04-15 00:00:00', 1, 1, '2026-04-15 09:00:00');
+(3, 10, 'HelloPharmacy',  '12, Bond Street, London WC1V 9NS',    '0207 321 8002', 'hello@hellopharmacy.co.uk',     5000.00, 1455.00, 'SUSPENDED', '2026-04-15 00:00:00', 3, 1, '2026-02-01 09:00:00');
 
 -- ============================================================================
 -- 5. CATALOGUE (stock adjusted for all 6 orders already placed)
