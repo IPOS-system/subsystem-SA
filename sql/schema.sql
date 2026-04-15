@@ -1,5 +1,3 @@
---  Version: 3.0 (Added commercial_applications table)
-
 DROP DATABASE IF EXISTS ipos_sa;
 CREATE DATABASE IF NOT EXISTS ipos_sa;
 USE ipos_sa;
@@ -97,7 +95,7 @@ CREATE TABLE IF NOT EXISTS order_items (
 );
 
 CREATE TABLE IF NOT EXISTS invoices (
-    invoice_id    VARCHAR(20)   PRIMARY KEY,  
+    invoice_id    VARCHAR(50)   PRIMARY KEY,  
     order_id      VARCHAR(20)   NOT NULL UNIQUE,
     merchant_id   INT           NOT NULL,
     invoice_date  DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -111,7 +109,7 @@ CREATE TABLE IF NOT EXISTS invoices (
 CREATE TABLE IF NOT EXISTS payments (
     payment_id      INT AUTO_INCREMENT PRIMARY KEY,
     merchant_id     INT           NOT NULL,
-    invoice_id      VARCHAR(20)   NOT NULL,
+    invoice_id      VARCHAR(50)   NOT NULL,
     amount_paid     DECIMAL(10,2) NOT NULL,
     payment_method  ENUM('BANK_TRANSFER','CARD','CHEQUE') NOT NULL,
     payment_date    DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -151,21 +149,21 @@ CREATE TABLE IF NOT EXISTS audit_log (
 
 CREATE TABLE IF NOT EXISTS commercial_applications (
     application_id   INT AUTO_INCREMENT PRIMARY KEY,
+    email            VARCHAR(100) NOT NULL,
     company_name     VARCHAR(100) NOT NULL,
     company_reg_no   VARCHAR(50)  NOT NULL,
     directors        VARCHAR(255) NOT NULL,
-    business_type    VARCHAR(50)  NOT NULL,
+    business_type    VARCHAR(100)  NOT NULL,
     address          VARCHAR(255) NOT NULL,
-    email            VARCHAR(100) NOT NULL,
     phone            VARCHAR(30),
     status           ENUM('PENDING','APPROVED','REJECTED') NOT NULL DEFAULT 'PENDING',
     submitted_at     DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     reviewed_by      INT DEFAULT NULL,
     reviewed_at      DATETIME DEFAULT NULL,
-    notes            TEXT,
     FOREIGN KEY (reviewed_by) REFERENCES users(user_id)
 );
 
+/*
 -- BCrypt hash of 'Admin1234!'
 INSERT IGNORE INTO users (username, password_hash, role)
 VALUES ('admin', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lheW', 'ADMIN');
@@ -173,3 +171,4 @@ VALUES ('admin', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lheW',
 -- BCrypt hash of 'Director1234!'
 INSERT IGNORE INTO users (username, password_hash, role)
 VALUES ('director', '$2a$10$GRLdNijSQMUvl/au9ofL.eDwmoohzzS7.rmNSJZ.0FxO9UHx3mRV.', 'DIRECTOR');
+*/
