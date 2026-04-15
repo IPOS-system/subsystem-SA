@@ -1,0 +1,36 @@
+@echo off
+REM ─────────────────────────────────────────────────────────────────────────────
+REM IPOS-SA Quick Start Script (Windows)
+REM
+REM FIRST TIME SETUP:
+REM   1. Install Java 21:  https://adoptium.net/
+REM   2. Install MySQL 8:  https://dev.mysql.com/downloads/
+REM   3. Run the schema:   mysql -u root -p < ..\sql\schema.sql
+REM   4. Edit application-dev.properties — change the MySQL password to yours
+REM   5. Change this file name from .properties.template to .properties
+REM   6. Run this script:  start-dev.bat
+REM ─────────────────────────────────────────────────────────────────────────────
+
+echo ══════════════════════════════════════════
+echo   IPOS-SA Backend — Starting (dev mode)
+echo ══════════════════════════════════════════
+echo.
+
+REM Check Java
+java -version 2>nul
+if errorlevel 1 (
+    echo ERROR: Java is not installed.
+    echo Download Java 21 from: https://adoptium.net/
+    pause
+    exit /b 1
+)
+
+echo.
+echo Starting Spring Boot on port 8080...
+echo Press Ctrl+C to stop.
+echo.
+
+REM Run with dev profile (uses application-dev.properties)
+mvnw.cmd spring-boot:run -Dspring-boot.run.profiles=dev
+
+pause
