@@ -27,6 +27,7 @@ public class MerchantDTO {
   private BigDecimal creditLimit;
   private BigDecimal currentBalance;
 
+  private Boolean isActive;
   private Merchant.AccountStatus accountStatus;
   private LocalDateTime statusChangedAt;
 

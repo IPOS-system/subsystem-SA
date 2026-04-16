@@ -433,6 +433,7 @@ public class AccountService {
         .merchantId(merchant.getMerchantId())
         .userId(merchant.getUser().getUserId())
         .username(merchant.getUser().getUsername())
+        .isActive(merchant.getUser().getIsActive()) 
         .companyName(merchant.getCompanyName())
         .address(merchant.getAddress())
         .phone(merchant.getPhone())
