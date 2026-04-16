@@ -212,7 +212,7 @@ namespace GOATflow
 
         private void Catalogue_AddToBasket(object sender, RoutedEventArgs e)
         {
-            if (((Button)sender).Tag is not CatalogueItemDTO item) return;
+            if (((Button)sender).Tag is not CatalogueItemDTO item) return; 
 
             var existing = _basket.FirstOrDefault(b => b.ProductId == item.ProductId);
             if (existing != null)
@@ -320,11 +320,13 @@ namespace GOATflow
             try
             {
                 var order = await Instance.HttpService.PostOrderAsync(lines);
-                _basket.Clear();
-                RefreshBasket();
+
+                await Task.Delay(1000);
                 MessageBox.Show(
                     $"Order {order.OrderId} placed!\nTotal: £{order.TotalAmount:N2}",
                     "Order Confirmed", MessageBoxButton.OK, MessageBoxImage.Information);
+                _basket.Clear();
+                RefreshBasket();
             }
             catch (Exception ex)
             {

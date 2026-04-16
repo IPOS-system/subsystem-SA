@@ -44,6 +44,7 @@ namespace GOATflow.Models
         [JsonProperty("creditLimit")] public decimal CreditLimit { get; set; }
         [JsonProperty("currentBalance")] public decimal CurrentBalance { get; set; }
         [JsonProperty("accountStatus")] public string AccountStatus { get; set; } = "";
+        [JsonProperty("isActive")] public bool IsActive { get; set; }
         [JsonProperty("statusChangedAt")] public DateTime? StatusChangedAt { get; set; }
         [JsonProperty("discountPlanId")] public int? DiscountPlanId { get; set; }
         [JsonProperty("discountPlanName")] public string? DiscountPlanName { get; set; }

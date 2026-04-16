@@ -277,6 +277,8 @@
                                         <DataGridTextColumn Header="Email"   Binding="{Binding Email}"        Width="180"/>
                                         <DataGridTextColumn Header="Balance" Binding="{Binding CurrentBalance, StringFormat=£\{0:N2\}}" Width="90"/>
                                         <DataGridTextColumn Header="Status"  Binding="{Binding AccountStatus}" Width="100"/>
+                                        <DataGridTextColumn Header="Is Active"  Binding="{Binding IsActive}" Width="50"/>
+
                                         <DataGridTemplateColumn Header="Actions" Width="280">
                                             <DataGridTemplateColumn.CellTemplate>
                                                 <DataTemplate>
