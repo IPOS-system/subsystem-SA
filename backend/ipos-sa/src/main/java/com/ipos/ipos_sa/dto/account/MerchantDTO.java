@@ -1,0 +1,40 @@
+package com.ipos.ipos_sa.dto.account;
+
+import com.ipos.ipos_sa.entity.Merchant;
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import lombok.Builder;
+import lombok.Data;
+
+/**
+ * Response DTO representing a merchant account. Returned by GET /api/accounts/merchants and GET
+ * /api/accounts/merchants/{id}.
+ */
+@Data
+@Builder
+public class MerchantDTO {
+
+  private Integer merchantId;
+  private Integer userId;
+  private String username;
+
+  private String companyName;
+  private String address;
+  private String phone;
+  private String fax;
+  private String email;
+
+  private BigDecimal creditLimit;
+  private BigDecimal currentBalance;
+
+  private Boolean isActive;
+  private Merchant.AccountStatus accountStatus;
+  private LocalDateTime statusChangedAt;
+
+  /** The assigned discount plan's ID and name. */
+  private Integer discountPlanId;
+
+  private String discountPlanName;
+
+  private LocalDateTime createdAt;
+}
