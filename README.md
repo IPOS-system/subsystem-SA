@@ -40,3 +40,57 @@ Run these commands in MySQL:
 ```bash
 mysql -u root -p < sql/schema.sql
 mysql -u root -p < sql/seed_data.sql
+```
+
+## Backend setup
+1. Open `Backend/src/main/resources/application.properties`
+2. Check the MySQL username and password
+3. Start the backend:
+
+```bash
+cd Backend
+./mvnw spring-boot:run
+```
+
+The backend runs on:
+
+```text
+http://localhost:8080
+```
+
+## Frontend setup
+1. Open `Frontend/GOATflow.sln` in Visual Studio 2022
+2. Run the project with **F5**
+
+## Default login accounts
+### Admin
+- Username: `Sysdba`
+- Password: `London_weighting`
+
+### Manager
+- Username: `manager`
+- Password: `Get_it_done`
+
+### Accountant
+- Username: `accountant`
+- Password: `Count_money`
+
+### Merchant
+- Username: `city`
+- Password: `city_password`
+
+## Running tests
+Backend unit tests can be run with:
+
+```bash
+cd Backend
+./mvnw test
+```
+
+## Notes
+- Make sure MySQL is running before starting the backend.
+- The frontend requires the backend to be running on port `8080`.
+- Seed data creates sample users, merchants, catalogue items, orders, invoices, and payments.
+
+## Team
+Team 16 – GoatFlow
