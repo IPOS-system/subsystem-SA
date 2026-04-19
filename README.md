@@ -92,5 +92,3 @@ cd Backend
 - The frontend requires the backend to be running on port `8080`.
 - Seed data creates sample users, merchants, catalogue items, orders, invoices, and payments.
 
-## Team
-Team 16 – GoatFlow
