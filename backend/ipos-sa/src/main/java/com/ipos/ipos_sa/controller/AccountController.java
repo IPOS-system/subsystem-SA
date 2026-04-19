@@ -5,7 +5,6 @@ import com.ipos.ipos_sa.entity.Merchant;
 import com.ipos.ipos_sa.entity.User;
 import com.ipos.ipos_sa.exception.AccessDeniedException;
 import com.ipos.ipos_sa.exception.ResourceNotFoundException;
-import com.ipos.ipos_sa.exception.ValidationException;
 import com.ipos.ipos_sa.repository.MerchantRepository;
 import com.ipos.ipos_sa.repository.UserRepository;
 import com.ipos.ipos_sa.service.AccountService;
@@ -35,41 +34,30 @@ public class AccountController {
   private final UserRepository userRepository;
   private final MerchantRepository merchantRepository;
 
-  // ── Merchant Endpoints ────────────────────────────────────────────────────
+  // Merchant Endpoints
 
-  /**
-   * GET /api/accounts/me Returns account details.
-   *
-   * For MERCHANT role: returns the caller's own merchant profile. For ADMIN/MANAGER role: requires ?merchantId= query param to specify which merchant to look up.
+    /**
+   * GET /api/accounts/me
+   * Returns the caller's own merchant profile. Only useful for MERCHANT role.
+   * Staff users should use GET /api/accounts/merchants/{id} instead.
    */
   @GetMapping("/me")
-  public ResponseEntity<MerchantDTO> getMyAccount(
-      @RequestParam(required = false) Integer merchantId, Authentication auth) {
+  public ResponseEntity<MerchantDTO> getMyAccount(Authentication auth) {
 
+    requireRole(auth, User.Role.MERCHANT);
     User user = resolveUser(auth);
 
-    // MERCHANT role: look up own profile
-    if (hasRole(auth, User.Role.MERCHANT)) {
-      Merchant merchant =
-          merchantRepository
-              .findByUser(user)
-              .orElseThrow(
-                  () ->
-                      new ResourceNotFoundException(
-                          "Merchant profile not found for user: " + user.getUsername()));
-      return ResponseEntity.ok(accountService.toMerchantDTO(merchant));
-    }
+    Merchant merchant =
+        merchantRepository
+            .findByUser(user)
+            .orElseThrow(
+                () -> new ResourceNotFoundException(
+                    "Merchant profile not found for user: " + user.getUsername()));
 
-    // ADMIN / MANAGER: look up by merchantId query param
-    requireRole(auth, User.Role.ADMIN, User.Role.MANAGER);
-    if (merchantId == null) {
-      throw new ValidationException(
-          "Admin/Manager users must provide ?merchantId= to look up a merchant account.");
-    }
-    return ResponseEntity.ok(accountService.getMerchantById(merchantId));
+    return ResponseEntity.ok(accountService.toMerchantDTO(merchant));
   }
 
-  /**
+   /**
    * GET /api/accounts/merchants Returns all merchant accounts. Optionally filter with ?search=term
    */
   @GetMapping("/merchants")
@@ -86,6 +74,7 @@ public class AccountController {
     return ResponseEntity.ok(result);
   }
 
+  
   /** GET /api/accounts/merchants/{id} Returns a single merchant by ID. */
   @GetMapping("/merchants/{id}")
   public ResponseEntity<MerchantDTO> getMerchant(@PathVariable Integer id, Authentication auth) {

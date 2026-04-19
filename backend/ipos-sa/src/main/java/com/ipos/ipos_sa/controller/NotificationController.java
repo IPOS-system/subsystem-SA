@@ -30,46 +30,55 @@ public class NotificationController {
   private final CatalogueService catalogueService;
   private final MerchantRepository merchantRepository;
 
-  /**
-   * GET /api/notifications Returns a summary of active warnings for the dashboard.
-   *
-   * Response includes: - lowStockWarning: true if any active product is below its min stock
-   * level - lowStockCount: how many products are below threshold - defaultedMerchants: list of
-   * merchants currently IN_DEFAULT
-   */
+  private boolean hasRole(Authentication auth, User.Role role) {
+  String roleStr = auth.getAuthorities().iterator().next().getAuthority().replace("ROLE_", "");
+  return role.name().equals(roleStr);
+  }
+
+
   @GetMapping
   public ResponseEntity<NotificationDTO> getNotifications(Authentication auth) {
 
-    requireRole(auth, User.Role.ADMIN, User.Role.MANAGER);
-
-    // Low stock check
-    List<CatalogueItem> lowStockItems = catalogueService.getLowStockProducts();
-
-    // In-default merchants
-    List<Merchant> defaultedMerchants =
-        merchantRepository.findByAccountStatus(Merchant.AccountStatus.IN_DEFAULT);
-
-    List<NotificationDTO.DefaultedMerchantDTO> defaultedDTOs =
-        defaultedMerchants.stream()
-            .map(
-                m ->
-                    NotificationDTO.DefaultedMerchantDTO.builder()
-                        .merchantId(m.getMerchantId())
-                        .companyName(m.getCompanyName())
-                        .accountStatus(m.getAccountStatus().name())
-                        .build())
-            .collect(Collectors.toList());
-
-    NotificationDTO response =
+  // Non-admin/manager callers (e.g. MERCHANT) get a safe empty response
+  // rather than a 403, so the frontend can call this unconditionally.
+  if (!hasRole(auth, User.Role.ADMIN) && !hasRole(auth, User.Role.MANAGER)) {
+    return ResponseEntity.ok(
         NotificationDTO.builder()
-            .lowStockWarning(!lowStockItems.isEmpty())
-            .lowStockCount(lowStockItems.size())
-            .defaultedMerchants(defaultedDTOs)
-            .build();
+            .lowStockWarning(false)
+            .lowStockCount(0)
+            .defaultedMerchants(java.util.Collections.emptyList())
+            .build());
+  }
+
+  // Low stock check
+  List<CatalogueItem> lowStockItems = catalogueService.getLowStockProducts();
+
+  // In-default merchants
+  List<Merchant> defaultedMerchants =
+      merchantRepository.findByAccountStatus(Merchant.AccountStatus.IN_DEFAULT);
+
+  List<NotificationDTO.DefaultedMerchantDTO> defaultedDTOs =
+      defaultedMerchants.stream()
+          .map(
+              m ->
+                  NotificationDTO.DefaultedMerchantDTO.builder()
+                      .merchantId(m.getMerchantId())
+                      .companyName(m.getCompanyName())
+                      .accountStatus(m.getAccountStatus().name())
+                      .build())
+          .collect(Collectors.toList());
+
+  NotificationDTO response =
+      NotificationDTO.builder()
+          .lowStockWarning(!lowStockItems.isEmpty())
+          .lowStockCount(lowStockItems.size())
+          .defaultedMerchants(defaultedDTOs)
+          .build();
 
     return ResponseEntity.ok(response);
   }
 
+  
   // Helpers
 
   private void requireRole(Authentication auth, User.Role... permitted) {

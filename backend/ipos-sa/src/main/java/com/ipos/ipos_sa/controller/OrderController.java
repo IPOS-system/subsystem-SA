@@ -39,45 +39,25 @@ public class OrderController {
   private final UserRepository userRepository;
   private final MerchantRepository merchantRepository;
 
-@PostMapping
-  public ResponseEntity<PlaceOrderResponse> placeOrder(
-      @Valid @RequestBody PlaceOrderRequest request, Authentication auth) {
+  @PostMapping
+  public ResponseEntity<OrderDTO> placeOrder(
+    @Valid @RequestBody PlaceOrderRequest request, Authentication auth) {
 
-    try {
-      requireRole(auth, User.Role.MERCHANT);
-      User user = resolveUser(auth);
+    requireRole(auth, User.Role.MERCHANT);
+    User user = resolveUser(auth);
 
-      Merchant merchant =
-          merchantRepository
-              .findByUser(user)
-              .orElseThrow(
-                  () -> new ResourceNotFoundException(
-                      "Merchant profile not found for user: " + user.getUsername()));
+    Merchant merchant =
+      merchantRepository
+          .findByUser(user)
+          .orElseThrow(
+              () -> new ResourceNotFoundException(
+                  "Merchant profile not found for user: " + user.getUsername()));
 
-      accountService.checkAndUpdateAccountStatus(merchant.getMerchantId());
+    accountService.checkAndUpdateAccountStatus(merchant.getMerchantId());
 
-      OrderDTO created = orderService.placeOrder(merchant.getMerchantId(), request, user);
+    OrderDTO created = orderService.placeOrder(merchant.getMerchantId(), request, user);
 
-      return ResponseEntity.status(HttpStatus.CREATED)
-          .body(PlaceOrderResponse.success(created.getOrderId()));
-
-    } catch (com.ipos.ipos_sa.exception.ValidationException e) {
-      String errorCode = inferErrorCode(e.getMessage());
-      return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-          .body(PlaceOrderResponse.failure(errorCode, e.getMessage()));
-
-    } catch (ResourceNotFoundException e) {
-      return ResponseEntity.status(HttpStatus.NOT_FOUND)
-          .body(PlaceOrderResponse.failure("PRODUCT_NOT_FOUND", e.getMessage()));
-
-    } catch (AccessDeniedException e) {
-      return ResponseEntity.status(HttpStatus.FORBIDDEN)
-          .body(PlaceOrderResponse.failure("ACCESS_DENIED", e.getMessage()));
-
-    } catch (Exception e) {
-      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-          .body(PlaceOrderResponse.failure("INTERNAL_ERROR", e.getMessage()));
-    }
+    return ResponseEntity.status(HttpStatus.CREATED).body(created);
   }
 
   /**
