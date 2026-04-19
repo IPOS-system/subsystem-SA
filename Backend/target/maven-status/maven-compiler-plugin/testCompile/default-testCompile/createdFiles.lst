@@ -1,0 +1,6 @@
+com/ipos/ipos_sa/service/DiscountPlanServiceTest.class
+com/ipos/ipos_sa/service/OrderServiceTest.class
+com/ipos/ipos_sa/service/AccountServiceTest.class
+com/ipos/ipos_sa/service/CatalogueServiceTest.class
+com/ipos/ipos_sa/service/PaymentServiceTest.class
+com/ipos/ipos_sa/service/AuthServiceTest.class

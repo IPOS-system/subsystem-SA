@@ -1,0 +1,14 @@
+Prerequisites:
+  - Java 21  (backend)
+  - MySQL 8  (database)
+  - Windows + .NET 9 SDK + Visual Studio 2022  (frontend)
+
+Setup (in order):
+  1. mysql -u root -p < sql/schema.sql
+  2. mysql -u root -p < sql/seed_data.sql
+  3. Edit Backend/src/main/resources/application.properties
+     → set spring.datasource.password to YOUR MySQL root password
+  4. cd Backend && ./mvnw spring-boot:run      (starts on port 8080)
+  5. Open Frontend/.../GOATflow.sln in Visual Studio and press F5.
+
+Default logins: (list the seeded ADMIN / MANAGER / MERCHANT credentials from seed_data.sql)
