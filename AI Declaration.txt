@@ -1,0 +1,6 @@
+﻿Declaration of AI Use
+During the development of this coursework I used Claude (Anthropic) as a supporting tool. Specifically, I used it:
+* As a debugging aid - to help me diagnose errors and unexpected behaviour in my code, and to understand why a given fix worked.
+* As a learning tool - to clarify concepts I was unfamiliar with and to help me understand language features/libraries.
+* For JavaDoc comments and code formatting / polishing - to suggest wording for documentation comments and to help with consistent code style.
+All design decisions, implementation choices, and final code were made and written by me with the aid of AI. AI suggestions were reviewed, understood, and edited by me before being incorporated into the project.
